@@ -1,0 +1,23 @@
+# Converte graus Celsius para Fahrenheit
+.loadlib 'io_ops'             # Para fazer IO
+
+set       S1, "Celsius -> Fahrenheit\n"
+set       S2, "Digite a Temperatura em Celsius: "
+set       S3, "A nova temperatura e: "
+set       S4, " graus F."
+
+print     S1
+print     S2
+read      S10, 5
+set       I1, S10
+
+mul       I1, I1, 9
+add       I1, I1, 160
+div       I1, I1, 5
+
+print     S3
+print     I1
+print     S4
+print     "\n"
+
+end
