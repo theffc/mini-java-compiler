@@ -1,9 +1,9 @@
-#load "lexico.cmo";;
+#load "lexer_java.cmo";;
 
 let rec tokens lexbuf =
-  let tok = Lexico.token lexbuf in
+  let tok = Lexer_java.token lexbuf in
   match tok with
-  | Lexico.EOF -> [Lexico.EOF]
+  | Lexer_java.EOF -> [Lexer_java.EOF]
   | _ -> tok :: tokens lexbuf
 ;;
 
