@@ -95,7 +95,7 @@ type tokens = AParen
             | FColc
             | AChave
             | FChave
-            | PTVirg
+            | PTV
             | Virg
             | Ponto
             | DoisPontos
@@ -204,7 +204,7 @@ rule token = parse
   | ']' { FColc }
   | '{' { AChave }
   | '}' { FChave }
-  | ';' { PTVirg }
+  | ';' { PTV }
   | ',' { Virg }
   | '.' { Ponto }
   | ':' { DoisPontos }
