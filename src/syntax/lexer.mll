@@ -73,13 +73,70 @@ rule token = parse
   | comentario { token lexbuf } (* ignora comentario *)
   | "/*" { comentario_bloco 0 lexbuf }
   | "*/" { failwith (msg_erro_comentario lexbuf "*/"); } (* achou um fechamento de comentario do nada *)
-
-  | "public" { Public }
-  | "class" { Class }
-  | "{" { AChave }
-  | "}" { FChave }
-  | ';' { PTV }
-  | "import java.util.Scanner" { ImportScanner }
+  | "public" { PUBLIC }
+  | "private" { PRIVATE }
+  | "static" { STATIC }
+  | "main" { MAIN }
+  | "class" { CLASS }
+  | "new" { NEW }
+  | "return" { RETURN }
+  | "void" { VOID }
+  | "int" { INT }
+  | "char" { CHAR }
+  | "float" { FLOAT }
+  | "double" { DOUBLE }
+  | "String" { STRING }
+  | "boolean" { BOOLEAN }
+  | "if" { IF }
+  | "else" { ELSE }
+  | "for" { FOR }
+  | "do" { DO }
+  | "while" { WHILE }
+  | "switch" { SWITCH }
+  | "case" { CASE }
+  | "default" { DEFAULT }
+  | "break" { BREAK }
+  | "continue" { CONTINUE }
+  | "this" { THIS }
+  | "null" { NULL }
+  | "++" { OP_INCR }
+  | "--" { OP_DECR }
+  | '+' { OP_ADD }
+  | '-' { OP_SUB }
+  | '*' { OP_MUL }
+  | '/' { OP_DIV }
+  | '%' { OP_MOD }
+  | '!' { OP_NOT }
+  | "&&" { OP_AND }
+  | "||" { OP_OR }
+  | '<' { OP_LESS }
+  | "<=" { OP_LESS_EQUAL }
+  | "==" { OP_EQUAL }
+  | "!=" { OP_DIF }
+  | '>' { OP_GREATER }
+  | ">=" { OP_GREATER_EQUAL }
+  | '=' { ATRIB }
+  | '(' { OPEN_PARENTESIS }
+  | ')' { CLOSE_PARENTESIS }
+  | '[' { OPEN_BRACKETS }
+  | ']' { CLOSE_BRACKETS }
+  | '{' { OPEN_BRACES }
+  | '}' { CLOSE_BRACES }
+  | ';' { SEMI_COLON }
+  | ',' { COMMA }
+  | '.' { PERION }
+  | ':' { COLON }
+  | "System.out.print" { PRINT }
+  | "System.out.println" { PRINT_LN }
+  | "import java.util.Scanner" { IMPORT_SCANNER }
+  | "Scanner" { SCANNER }
+  | "System.in" { SYSTEM_IN }
+  | "nextBoolean" { NEXT_BOOLEAN }
+  | "nextDouble" { NEXT_DOUBLE }
+  | "nextFloat" { NEXT_FLOAT }
+  | "nextInt" { NEXT_INT }
+  | "nextByte" { NEXT_BYTE }
+  | "nextLine" { NEXT_LINE }
   | identificador as id { ID (id) }
   | _ as c { failwith (msg_erro lexbuf c); }
   | eof { EOF } 
