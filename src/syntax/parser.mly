@@ -4,6 +4,14 @@
 %}
 
 %token <string> ID
+
+%token <bool> LIT_BOOL
+%token <int> LIT_INT
+%token <float> LIT_FLOAT
+%token <float> LIT_DOUBLE
+%token <string> LIT_STRING
+%token <char> LIT_CHAR
+
 %token PUBLIC
 %token PRIVATE
 %token STATIC
@@ -70,21 +78,13 @@
 %token NEXT_LINE
 %token EOF
 
-/*
-%token <int> INT
-%token <float> FLOAT
-%token <string> ID
-%token <string> LITSTRING
-%token <string> LITCHAR
-
-%left OU XOU
-%left E
-%left IGUAL DIFERENTE
-%left MAIOR MAIORIGUAL MENOR MENORIGUAL
-%left SOMA SUB
-%left MULT DIVISAO MOD
-%right POTENCIA
-*/
+%left OP_OR
+%left OP_AND
+%left OP_EQUAL  OP_DIF
+%left OP_GREATER OP_GREATER_EQUAL OP_LESS OP_LESS_EQUAL
+%left OP_ADD OP_SUB
+%left OP_MULT OP_DIV OP_MOD
+/* %right OP_POTENCIA */
  
 
 
@@ -110,12 +110,11 @@ main_method:
 	;
 
 _method:
-    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { Method(name, t, ps) }
+    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES e=expression CLOSE_BRACES { Method(name, t, ps, e) }
 	;
 
 parameters:
     ps=separated_list(COMMA, parameter) { ps }
-
 parameter:
     t=_type id=ID { Parameter(id, t)}
     ;
@@ -129,3 +128,59 @@ _type:
     ;
 
 
+/* statement:
+    stm_if {}
+    ;
+
+stm_if:
+    IF OPEN_PARENTESIS expression CLOSE_PARENTESIS  OPEN_BRACES stms=statement* senao=stm_senao? CLOSE_BRACES { StmSe(e,stms,senao)}
+    ;
+
+stm_else:
+    ELSE OPEN_PARENTESIS expression CLOSE_PARENTESIS OPEN_BRACES stms=stm_list* CLOSE_BRACES { StmElse }
+*/
+
+expression:
+   | e1=expression o=operator e2=expression { ExpOperator(e1,o,e2) }
+   | t=term {ExpTerm t} 
+   | OP_NOT t=term { ExpNotTerm t}
+   /*| OPEN_PARENTESIS e=expression CLOSE_PARENTESIS { e }*/
+   ;
+
+operator:
+    | OP_ADD { OpAdd }
+    | OP_SUB { OpSub }
+    | OP_MUL { OpMul }
+    | OP_DIV { OpDiv }
+    | OP_MOD { OpMod }
+    | OP_AND { OpAnd }
+    | OP_OR { OpOr }
+    | OP_LESS { OpLess }
+    | OP_LESS_EQUAL { OpLessEqual }
+    | OP_EQUAL { OpEqual }
+    | OP_DIF { OpDif }
+    | OP_GREATER { OpGreater }
+    | OP_GREATER_EQUAL { OpGreaterEqual }
+    ;
+
+term:
+    | l=literal { TermLiteral(l) }
+    | id=ID { TermId(id) }
+    | m=method_call { TermMethodCall(m) }
+    ;
+
+literal:
+    l=LIT_BOOL { LitBool(l) }
+    | l=LIT_INT { LitInt(l) }
+    | l=LIT_FLOAT { LitFloat(l) }
+    | l=LIT_DOUBLE { LitDouble(l) }
+    | l=LIT_CHAR { LitChar(l) }
+    | l=LIT_STRING { LitString(l) }
+    ;
+
+method_call:
+    | id=ID OPEN_PARENTESIS args=method_args CLOSE_PARENTESIS { MethodCall(id, args) }
+    ;
+
+method_args:
+    | exprs=separated_list(COMMA, expression) {  List.map (fun expr -> MethodArgument(expr)) exprs}

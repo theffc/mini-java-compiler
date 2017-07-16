@@ -73,6 +73,22 @@ rule token = parse
   | comentario { token lexbuf } (* ignora comentario *)
   | "/*" { comentario_bloco 0 lexbuf }
   | "*/" { failwith (msg_erro_comentario lexbuf "*/"); } (* achou um fechamento de comentario do nada *)
+
+  (* LITERALS *)
+  | booleano as bol { let value = bool_of_string bol in
+                    LIT_BOOL (value) }
+  | inteiro as num { let numero = int_of_string num in
+                   LIT_INT (numero) }
+  | numeroFloat as num { let value = float_of_string num in LIT_DOUBLE (value) }
+  | '"'  { let pos = lexbuf.lex_curr_p in
+           let lin = pos.pos_lnum
+           and col = pos.pos_cnum - pos.pos_bol - 1 in
+           let buffer = Buffer.create 1 in
+           let str = leia_string lin col buffer lexbuf in
+           LIT_STRING (str) }
+  | '\'' (character as c) '\'' { LIT_CHAR (c) }
+
+  (* KEYWORDS *)
   | "public" { PUBLIC }
   | "private" { PRIVATE }
   | "static" { STATIC }
