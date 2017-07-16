@@ -124,7 +124,7 @@ rule token = parse
   | '}' { CLOSE_BRACES }
   | ';' { SEMI_COLON }
   | ',' { COMMA }
-  | '.' { PERION }
+  | '.' { PERIOD }
   | ':' { COLON }
   | "System.out.print" { PRINT }
   | "System.out.println" { PRINT_LN }

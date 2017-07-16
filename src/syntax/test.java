@@ -7,7 +7,7 @@ public class micro11
 
 	}
 
-	public static int verifica(int n) {
-		
+	public static int verifica() {
+
 	}
 }

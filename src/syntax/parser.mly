@@ -55,7 +55,7 @@
 %token CLOSE_BRACES
 %token SEMI_COLON
 %token COMMA
-%token PERION
+%token PERIOD
 %token COLON
 %token PRINT
 %token PRINT_LN
@@ -102,22 +102,19 @@ main_class:
     ;
 
 main_class_body:
-	main=main_method ms=methods?  { MainClassBody(main, ms) }
+	main=main_method ms=_method*  { MainClassBody(main, ms) }
 	;
 
 main_method:
 	PUBLIC STATIC VOID MAIN OPEN_PARENTESIS STRING OPEN_BRACKETS CLOSE_BRACKETS ID CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { MainMethod }
 	;
 
-methods:
-    m=_method* { Methods(m) }
-
 _method:
-    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters? CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { Method(name, t, ps) }
+    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { Method(name, t, ps) }
 	;
 
 parameters:
-    p=parameter* { Parameters(p) }
+    ps=separated_list(COMMA, parameter) { ps }
 
 parameter:
     t=_type id=ID { Parameter(id, t)}
