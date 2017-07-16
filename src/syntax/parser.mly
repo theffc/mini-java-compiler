@@ -75,58 +75,7 @@
 %token <float> FLOAT
 %token <string> ID
 %token <string> LITSTRING
-%token <string> LITCHAR  
-%token ALGORITMO
-%token SOMA SUB MULT DIVISAO MOD
-%token POTENCIA
-%token APAR
-%token FPAR
-%token ACOL
-%token FCOL
-%token IGUAL
-%token DIFERENTE
-%token MAIOR
-%token MAIORIGUAL
-%token MENOR
-%token MENORIGUAL
-%token E OU NAO XOU
-%token EOF
-%token ATRIB
-%token DECLARA 
-%token PTV
-%token VAR
-%token INTEIRO
-%token LOGICO
-%token REAL
-%token ATE 
-%token CARACTER
-%token CASO
-%token DE
-%token VIRGULA
-%token INICIO
-%token FUNCAO
-%token FIMFUNCAO
-%token FIMPARA 
-%token FIMSE
-%token FIMENQUANTO
-%token FIMESCOLHA
-%token SE
-%token ENTAO
-%token SENAO
-%token ENQUANTO
-%token ESCOLHA
-%token ESCREVA
-%token ESCREVAL
-%token LEIA
-%token FACA
-%token OUTROCASO
-%token PARA 
-%token PASSO 
-%token RETORNE
-%token VERDADEIRO
-%token FALSO
-%token FIMALGORITMO
-
+%token <string> LITCHAR
 
 %left OU XOU
 %left E
@@ -153,18 +102,22 @@ main_class:
     ;
 
 main_class_body:
-	main=main_method  { MainClassBody(main) }
-    | main=main_method ms=_method* { MainClassBodyWithMethods(main, ms) }
+	main=main_method ms=methods?  { MainClassBody(main, ms) }
 	;
 
 main_method:
 	PUBLIC STATIC VOID MAIN OPEN_PARENTESIS STRING OPEN_BRACKETS CLOSE_BRACKETS ID CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { MainMethod }
 	;
 
+methods:
+    m=_method* { Methods(m) }
+
 _method:
-	PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { Method(name, t) }
-    | PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameter* CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { MethodWithParameters(name, t, ps) }
+    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters? CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { Method(name, t, ps) }
 	;
+
+parameters:
+    p=parameter* { Parameters(p) }
 
 parameter:
     t=_type id=ID { Parameter(id, t)}
