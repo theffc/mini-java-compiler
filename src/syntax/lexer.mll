@@ -131,7 +131,7 @@ rule token = parse
   | "!=" { OP_DIF }
   | '>' { OP_GREATER }
   | ">=" { OP_GREATER_EQUAL }
-  | '=' { ATRIB }
+  | '=' { ATTR }
   | '(' { OPEN_PARENTESIS }
   | ')' { CLOSE_PARENTESIS }
   | '[' { OPEN_BRACKETS }
@@ -145,14 +145,16 @@ rule token = parse
   | "System.out.print" { PRINT }
   | "System.out.println" { PRINT_LN }
   | "import java.util.Scanner" { IMPORT_SCANNER }
-  | "Scanner" { SCANNER }
-  | "System.in" { SYSTEM_IN }
+
+(*
   | "nextBoolean" { NEXT_BOOLEAN }
   | "nextDouble" { NEXT_DOUBLE }
   | "nextFloat" { NEXT_FLOAT }
   | "nextInt" { NEXT_INT }
   | "nextByte" { NEXT_BYTE }
   | "nextLine" { NEXT_LINE }
+*)
+
   | identificador as id { ID (id) }
   | _ as c { failwith (msg_erro lexbuf c); }
   | eof { EOF } 

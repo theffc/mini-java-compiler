@@ -54,7 +54,7 @@
 %token OP_DIF
 %token OP_GREATER
 %token OP_GREATER_EQUAL
-%token ATRIB
+%token ATTR
 %token OPEN_PARENTESIS
 %token CLOSE_PARENTESIS
 %token OPEN_BRACKETS
@@ -68,8 +68,6 @@
 %token PRINT
 %token PRINT_LN
 %token IMPORT_SCANNER
-%token SCANNER
-%token SYSTEM_IN
 %token NEXT_BOOLEAN
 %token NEXT_DOUBLE
 %token NEXT_FLOAT
@@ -80,7 +78,7 @@
 
 %left OP_OR
 %left OP_AND
-%left OP_EQUAL  OP_DIF
+%left OP_EQUAL OP_DIF
 %left OP_GREATER OP_GREATER_EQUAL OP_LESS OP_LESS_EQUAL
 %left OP_ADD OP_SUB
 %left OP_MULT OP_DIV OP_MOD
@@ -106,11 +104,11 @@ main_class_body:
 	;
 
 main_method:
-	PUBLIC STATIC VOID MAIN OPEN_PARENTESIS STRING OPEN_BRACKETS CLOSE_BRACKETS ID CLOSE_PARENTESIS OPEN_BRACES CLOSE_BRACES { MainMethod }
+	PUBLIC STATIC VOID MAIN OPEN_PARENTESIS STRING OPEN_BRACKETS CLOSE_BRACKETS ID CLOSE_PARENTESIS OPEN_BRACES stms=statement*  CLOSE_BRACES { MainMethod(stms) }
 	;
 
 _method:
-    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES e=expression CLOSE_BRACES { Method(name, t, ps, e) }
+    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES stms=statement* CLOSE_BRACES { Method(name, t, ps, stms) }
 	;
 
 parameters:
@@ -128,23 +126,57 @@ _type:
     ;
 
 
-/* statement:
-    stm_if {}
+statement:
+      s=stm_attr { s }
+    | s=stm_var_declaration { s }
+    | s=method_call SEMI_COLON { StmMethodCall(s) }
+    | s=new_obj SEMI_COLON { StmNewObj(s) }
+    | s=stm_return { s }
+    | s=stm_print { s }
+    | s=stm_if { s }
+    | s=stm_while { s }
+    ;
+
+stm_attr:
+    v=variable ATTR e=expression SEMI_COLON { StmAttr(v,e) }
+    ;
+
+stm_var_declaration:
+    t=_type ids=separated_nonempty_list(COMMA, ID) SEMI_COLON { StmVarDecl(List.map(fun id -> VarDecl(id, t)) ids) }
+    ;
+
+stm_print:
+      PRINT OPEN_PARENTESIS e=expression CLOSE_PARENTESIS SEMI_COLON { StmPrint(e) }
+    | PRINT_LN OPEN_PARENTESIS e=expression CLOSE_PARENTESIS SEMI_COLON { StmPrintLn(e) }
     ;
 
 stm_if:
-    IF OPEN_PARENTESIS expression CLOSE_PARENTESIS  OPEN_BRACES stms=statement* senao=stm_senao? CLOSE_BRACES { StmSe(e,stms,senao)}
+      IF OPEN_PARENTESIS exp=expression CLOSE_PARENTESIS s=statement senao=stm_else? { StmIf(exp, [s], senao) }
+    | IF OPEN_PARENTESIS exp=expression CLOSE_PARENTESIS  OPEN_BRACES stms=statement* CLOSE_BRACES senao=stm_else? { StmIf(exp, stms, senao) }
     ;
 
 stm_else:
-    ELSE OPEN_PARENTESIS expression CLOSE_PARENTESIS OPEN_BRACES stms=stm_list* CLOSE_BRACES { StmElse }
-*/
+      ELSE s=statement { StmElse([s]) }
+    | ELSE OPEN_BRACES stms=statement* CLOSE_BRACES { StmElse(stms) }
+    /*| ELSE IF OPEN_PARENTESIS exp=expression CLOSE_PARENTESIS s=statement another=stm_else? { StmElseIf(exp, [s], another) }
+    | ELSE IF OPEN_PARENTESIS exp=expression CLOSE_PARENTESIS OPEN_BRACES stms=statement* CLOSE_BRACES another=stm_else? { StmElseIf(exp, stms, another) }*/
+    ;
+
+stm_return:
+    RETURN e=expression SEMI_COLON { StmReturn(e) }
+    ;
+
+stm_while:
+    WHILE OPEN_PARENTESIS e=expression CLOSE_PARENTESIS OPEN_BRACES s=statement* CLOSE_PARENTESIS { StmWhile(e, s) }
+    ;
+
 
 expression:
    | e1=expression o=operator e2=expression { ExpOperator(e1,o,e2) }
    | t=term {ExpTerm t} 
-   | OP_NOT t=term { ExpNotTerm t}
-   /*| OPEN_PARENTESIS e=expression CLOSE_PARENTESIS { e }*/
+   | OP_NOT t=term { ExpNotTerm t }
+   | OP_SUB t=term { ExpMinusTerm t } 
+   | OPEN_PARENTESIS e=expression CLOSE_PARENTESIS { e }
    ;
 
 operator:
@@ -165,9 +197,15 @@ operator:
 
 term:
     | l=literal { TermLiteral(l) }
-    | id=ID { TermId(id) }
+    | v=variable { TermVariable(v) }
     | m=method_call { TermMethodCall(m) }
+    | n=new_obj { TermNewObj(n) }
     ;
+
+variable:
+      id=ID { Var(id) }
+    | id=ID OPEN_BRACKETS e=expression CLOSE_BRACKETS { VarArray(id, e) }
+    | ID PERIOD v=variable { v }
 
 literal:
     l=LIT_BOOL { LitBool(l) }
@@ -178,9 +216,18 @@ literal:
     | l=LIT_STRING { LitString(l) }
     ;
 
+
+/* ESSA PARTE DE CHAMADA DE METODO TA DANDO MUITO PROBLEMA */
+
 method_call:
-    | id=ID OPEN_PARENTESIS args=method_args CLOSE_PARENTESIS { MethodCall(id, args) }
+      name=ID OPEN_PARENTESIS args=method_args CLOSE_PARENTESIS { MethodCall(name, args) }
+      | receiver=variable PERIOD name=ID OPEN_PARENTESIS args=method_args CLOSE_PARENTESIS { MethodCallThroughType(receiver, name, args) }
     ;
 
 method_args:
-    | exprs=separated_list(COMMA, expression) {  List.map (fun expr -> MethodArgument(expr)) exprs}
+    | exprs=separated_list(COMMA, expression) {  List.map (fun expr -> MethodArgument(expr)) exprs }
+
+new_obj:
+    NEW m=method_call { NewObj(m) }
+    ;
+
