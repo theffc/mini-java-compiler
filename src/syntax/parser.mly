@@ -68,12 +68,14 @@
 %token PRINT
 %token PRINT_LN
 %token IMPORT_SCANNER
-%token NEXT_BOOLEAN
+
+/*%token NEXT_BOOLEAN
 %token NEXT_DOUBLE
 %token NEXT_FLOAT
 %token NEXT_INT
 %token NEXT_BYTE
-%token NEXT_LINE
+%token NEXT_LINE*/
+
 %token EOF
 
 %left OP_OR
@@ -167,7 +169,7 @@ stm_return:
     ;
 
 stm_while:
-    WHILE OPEN_PARENTESIS e=expression CLOSE_PARENTESIS OPEN_BRACES s=statement* CLOSE_PARENTESIS { StmWhile(e, s) }
+    WHILE OPEN_PARENTESIS e=expression CLOSE_PARENTESIS OPEN_BRACES s=statement* CLOSE_BRACES { StmWhile(e, s) }
     ;
 
 
@@ -206,6 +208,7 @@ variable:
       id=ID { Var(id) }
     | id=ID OPEN_BRACKETS e=expression CLOSE_BRACKETS { VarArray(id, e) }
     | ID PERIOD v=variable { v }
+    ;
 
 literal:
     l=LIT_BOOL { LitBool(l) }
