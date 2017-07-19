@@ -2,3 +2,11 @@
 src/syntax/_build/
 
 src/syntax/main.byte
+doc/doc.aux
+doc/doc.idx
+doc/doc.lof
+doc/doc.log
+doc/doc.lol
+doc/doc.lot
+doc/doc.out
+doc/doc.toc

@@ -1,3 +1,11 @@
+
+% -------------------------------------------------------------------- %
+
+% USE  /Library/TeX/texbin/pdflatex  TO COMPILE LATEX TO PDF IN MAC (assuming installation through MacTex) %
+
+% -------------------------------------------------------------------- %
+
+
 \documentclass[12pt,a4paper,twoside]{report}
 % -------------------------------------------------------------------- %
 % Pacotes
@@ -402,7 +410,7 @@ Saída:
 0
 \end{terminal}
 
-\subsection{Micro Programas}
+\subsubsection{Micro Programas}
 \subsubsection{Micro 01}
 \lstinputlisting[caption={Programa micro 01 em Java}]{codigos/micro01/micro01.java}
 \lstinputlisting[caption={Programa Micro 01 em PASM}]{codigos/micro01/micro01.txt}
@@ -543,6 +551,59 @@ Negativo
 Digite um numero: 0
 Zero
 \end{terminal}
+
+
+\chapter{Analisador Léxico}
+
+\section{Introdução}
+
+O analisador léxico é a primeira parte do que é chamado de "front-end" do compilador. Nessa etapa, o objetivo é identificar se o arquivo em questão possui apenas as palavras, expressões, e símbolos definidos pela linguagem.
+
+Além disso, essa etapa tem um trabalho fundamental para as etapas seguintes, pois ela organiza a informação coletada do arquivo. Primeiro, remove o que não será mais utilizado, como espaços em branco, comentários, saltos de linha, identação, etc. E cria uma lista de estruturas chamadas de "tokens", as quais servirão para identificar as estruturas formais da linguagem.
+
+Como o analisador léxico é um reconhecedor de padrões de caracteres, as expressões regulares serão utilizadas para definir de forma eficiente – uma vez que podem ser verificadas por um autômato finito – o conjunto dos padrões aceitos pela linguagem de programação.
+
+Vale ressaltar que a análise léxica poderia ser feita juntamente com a análise sintática devido à grande dependência entre as duas. No entanto, optou-se separá-las por motivos educacionais, de organização (facilidade de manutenção e alterações futuras), e por tradição, já que a maioria das linguagens fazem essa distinção entre análise léxica e sintática.
+
+\section{Implementação}
+
+Os códigos em OCaml, mostrados a seguir, são capazes de analisar um arquivo e dizer se ele está de acordo com a especificação léxica da linguagem mini-java.
+
+\lstinputlisting[caption={Output Simples em Parrot Assembly Language}]{../src/lex/carregador.ml}
+
+\lstinputlisting[caption={Output Simples em Parrot Assembly Language}]{../src/lex/lexer_java.mll}
+
+
+\chapter{Analisador Sintático}
+
+\section{Introdução}
+
+O analisador sintático, frequentemente chamado de "parser", é a segunda parte do "front-end" do compilador. Ele é responsável por analisar se o arquivo em questão define um programa válido para uma certa linguagem. Diferentemente da análise léxica, a qual está preocupada em identificar padrões de cadeias de caracteres, a análise sintática se preocupa com a combinação desses padrões para a criação de estruturas mais complexas da linguagem.
+
+Por ser tratar de um reconhecedor de estruturas mais complexas, a análise sintática não pode contar com apenas o poder das expressões regulares. É necessário ferramentas mais robustas como as gramáticas livres de contexto, as quais podem ser reconhecidas com autômatos de pilha.
+
+Assim, um analisador sintático pode ser definido como um conjunto de regras gramaticais ou produções. Representamos a ordem em que essas produções serão realizadas (derivações) em uma estrutura de árvore. Por isso, essa etapa do compilador produz uma estrutura chamada de "árvore sintática abstrata".
+
+
+\section{Implementação}
+
+Algumas partes do analisador léxico, mostrado anteriormente, foram modificadas para melhorar a integração com o parser:
+
+\lstinputlisting[caption={Analisador Léxico modificado para adequação com o parser}]{../src/syntax/lexer.mll}
+
+\lstinputlisting[caption={Interface principal para utilização do Analisador Sintático}]{../src/syntax/main.ml}
+
+\lstinputlisting[caption={Definições das regras da gramática}]{../src/syntax/parser.mly}
+
+\lstinputlisting[caption={Definição da Árvore Abstrata Sintática}]{../src/syntax/ast.ml}
+
+
+Exemplo de um programa mini-java que será analisado sintaticamente por esse parser.
+
+\lstinputlisting[caption={Programa exemplo em mini-java}]{parser-input.java}
+
+\lstinputlisting[caption={Árvore Abstrata Sintática para o programa anterior}]{parser-output.txt}
+
 
 
 \clearpage

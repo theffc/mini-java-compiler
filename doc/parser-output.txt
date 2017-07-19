@@ -1,0 +1,56 @@
+Ast.prog =
+Ast.Prog
+ (Ast.MainClass ("ParserInput",
+   Ast.MainClassBody
+    (Ast.MainMethod
+      [Ast.StmNewObj
+        (Ast.NewObj
+          (Ast.MethodCall ("Scanner",
+            [Ast.MethodArgument
+              (Ast.ExpTerm (Ast.TermVariable (Ast.Var "in")))])));
+       Ast.StmVarDecl
+        [Ast.VarDecl ("numero", Ast.Int); Ast.VarDecl ("x", Ast.Int)];
+       Ast.StmPrint
+        (Ast.ExpTerm (Ast.TermLiteral (Ast.LitString "Digite um numero: ")));
+       Ast.StmAttr (Ast.Var "x",
+        Ast.ExpTerm
+         (Ast.TermMethodCall
+           (Ast.MethodCall ("verifica",
+             [Ast.MethodArgument
+               (Ast.ExpTerm (Ast.TermVariable (Ast.Var "numero")))]))));
+       Ast.StmIf
+        (Ast.ExpOperator (Ast.ExpTerm (Ast.TermVariable (Ast.Var "x")),
+          Ast.OpEqual, Ast.ExpTerm (Ast.TermLiteral (Ast.LitInt 1))),
+        [Ast.StmPrintLn
+          (Ast.ExpTerm (Ast.TermLiteral (Ast.LitString "Numero Positivo")))],
+        Some
+         (Ast.StmElse
+           [Ast.StmIf
+             (Ast.ExpOperator (Ast.ExpTerm (Ast.TermVariable (Ast.Var "x")),
+               Ast.OpEqual, Ast.ExpTerm (Ast.TermLiteral (Ast.LitInt 0))),
+             [Ast.StmPrintLn
+               (Ast.ExpTerm (Ast.TermLiteral (Ast.LitString "Zero")))],
+             Some
+              (Ast.StmElse
+                [Ast.StmPrintLn
+                  (Ast.ExpTerm
+                    (Ast.TermLiteral (Ast.LitString "Numero Negativo")))]))]))],
+    [Ast.Method ("verifica", Ast.Int, [Ast.Parameter ("n", Ast.Int)],
+      [Ast.StmVarDecl [Ast.VarDecl ("res", Ast.Int)];
+       Ast.StmIf
+        (Ast.ExpOperator (Ast.ExpTerm (Ast.TermVariable (Ast.Var "n")),
+          Ast.OpGreater, Ast.ExpTerm (Ast.TermLiteral (Ast.LitInt 0))),
+        [Ast.StmAttr (Ast.Var "res",
+          Ast.ExpTerm (Ast.TermLiteral (Ast.LitInt 1)))],
+        Some
+         (Ast.StmElse
+           [Ast.StmIf
+             (Ast.ExpOperator (Ast.ExpTerm (Ast.TermVariable (Ast.Var "n")),
+               Ast.OpLess, Ast.ExpTerm (Ast.TermLiteral (Ast.LitInt 0))),
+             [Ast.StmAttr (Ast.Var "res",
+               Ast.ExpMinusTerm (Ast.TermLiteral (Ast.LitInt 1)))],
+             Some
+              (Ast.StmElse
+                [Ast.StmAttr (Ast.Var "res",
+                  Ast.ExpTerm (Ast.TermLiteral (Ast.LitInt 0)))]))]));
+       Ast.StmReturn (Ast.ExpTerm (Ast.TermVariable (Ast.Var "res")))])])))
