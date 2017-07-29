@@ -1,7 +1,7 @@
 
-src/syntax/_build/
+_build/
+main.byte
 
-src/syntax/main.byte
 doc/doc.aux
 doc/doc.idx
 doc/doc.lof
