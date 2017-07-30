@@ -11,6 +11,8 @@ and _type =
     | Void
 (*		  | Array of _type *)
 
+and pos = Lexing.position (* tipo e posição no arquivo fonte *)
+
 and prog = 
 	Prog of mainClass
 
@@ -67,16 +69,15 @@ and operator =
     | OpGreaterEqual
 
 and literal =
-    | LitBool of bool
-    | LitInt of int
-    | LitFloat of float
-    | LitDouble of float
-    | LitChar of char
-    | LitString of string
-
+    | LitBool of bool * pos
+    | LitInt of int * pos
+    | LitFloat of float * pos
+    | LitDouble of float * pos
+    | LitChar of char * pos
+    | LitString of string * pos
 
 and methodCall = 
-	|  MethodCall of id * methodArgument list
+	| MethodCall of id * methodArgument list
 	| MethodCallThroughType of variable * id * methodArgument list
 
 and methodArgument = 

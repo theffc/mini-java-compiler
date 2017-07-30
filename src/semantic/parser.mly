@@ -3,80 +3,80 @@
   open Ast
 %}
 
-%token <string> ID
+%token <string * Lexing.position> ID
 
-%token <bool> LIT_BOOL
-%token <int> LIT_INT
-%token <float> LIT_FLOAT
-%token <float> LIT_DOUBLE
-%token <string> LIT_STRING
-%token <char> LIT_CHAR
+%token <bool * Lexing.position> LIT_BOOL
+%token <int * Lexing.position> LIT_INT
+%token <float * Lexing.position> LIT_FLOAT
+%token <float * Lexing.position> LIT_DOUBLE
+%token <string * Lexing.position> LIT_STRING
+%token <char * Lexing.position> LIT_CHAR
 
-%token PUBLIC
-%token PRIVATE
-%token STATIC
-%token MAIN
-%token CLASS
-%token NEW
-%token RETURN
-%token VOID
-%token INT
-%token CHAR
-%token FLOAT
-%token DOUBLE
-%token STRING
-%token BOOLEAN
-%token IF
-%token ELSE
-%token FOR
-%token DO
-%token WHILE
-%token SWITCH
-%token CASE
-%token DEFAULT
-%token BREAK
-%token CONTINUE
-%token THIS
-%token NULL
-%token OP_INCR
-%token OP_DECR
-%token OP_ADD
-%token OP_SUB
-%token OP_MUL
-%token OP_DIV
-%token OP_MOD
-%token OP_NOT
-%token OP_AND
-%token OP_OR
-%token OP_LESS
-%token OP_LESS_EQUAL
-%token OP_EQUAL
-%token OP_DIF
-%token OP_GREATER
-%token OP_GREATER_EQUAL
-%token ATTR
-%token OPEN_PARENTESIS
-%token CLOSE_PARENTESIS
-%token OPEN_BRACKETS
-%token CLOSE_BRACKETS
-%token OPEN_BRACES
-%token CLOSE_BRACES
-%token SEMI_COLON
-%token COMMA
-%token PERIOD
-%token COLON
-%token PRINT
-%token PRINT_LN
-%token IMPORT_SCANNER
+%token <Lexing.position> PUBLIC
+%token <Lexing.position> PRIVATE
+%token <Lexing.position> STATIC
+%token <Lexing.position> MAIN
+%token <Lexing.position> CLASS
+%token <Lexing.position> NEW
+%token <Lexing.position> RETURN
+%token <Lexing.position> VOID
+%token <Lexing.position> INT
+%token <Lexing.position> CHAR
+%token <Lexing.position> FLOAT
+%token <Lexing.position> DOUBLE
+%token <Lexing.position> STRING
+%token <Lexing.position> BOOLEAN
+%token <Lexing.position> IF
+%token <Lexing.position> ELSE
+%token <Lexing.position> FOR
+%token <Lexing.position> DO
+%token <Lexing.position> WHILE
+%token <Lexing.position> SWITCH
+%token <Lexing.position> CASE
+%token <Lexing.position> DEFAULT
+%token <Lexing.position> BREAK
+%token <Lexing.position> CONTINUE
+%token <Lexing.position> THIS
+%token <Lexing.position> NULL
+%token <Lexing.position> OP_INCR
+%token <Lexing.position> OP_DECR
+%token <Lexing.position> OP_ADD
+%token <Lexing.position> OP_SUB
+%token <Lexing.position> OP_MUL
+%token <Lexing.position> OP_DIV
+%token <Lexing.position> OP_MOD
+%token <Lexing.position> OP_NOT
+%token <Lexing.position> OP_AND
+%token <Lexing.position> OP_OR
+%token <Lexing.position> OP_LESS
+%token <Lexing.position> OP_LESS_EQUAL
+%token <Lexing.position> OP_EQUAL
+%token <Lexing.position> OP_DIF
+%token <Lexing.position> OP_GREATER
+%token <Lexing.position> OP_GREATER_EQUAL
+%token <Lexing.position> ATTR
+%token <Lexing.position> OPEN_PARENTESIS
+%token <Lexing.position> CLOSE_PARENTESIS
+%token <Lexing.position> OPEN_BRACKETS
+%token <Lexing.position> CLOSE_BRACKETS
+%token <Lexing.position> OPEN_BRACES
+%token <Lexing.position> CLOSE_BRACES
+%token <Lexing.position> SEMI_COLON
+%token <Lexing.position> COMMA
+%token <Lexing.position> PERIOD
+%token <Lexing.position> COLON
+%token <Lexing.position> PRINT
+%token <Lexing.position> PRINT_LN
+%token <Lexing.position> IMPORT_SCANNER
 
-/*%token NEXT_BOOLEAN
-%token NEXT_DOUBLE
-%token NEXT_FLOAT
-%token NEXT_INT
-%token NEXT_BYTE
-%token NEXT_LINE*/
+/*%token <Lexing.position> NEXT_BOOLEAN
+%token <Lexing.position> NEXT_DOUBLE
+%token <Lexing.position> NEXT_FLOAT
+%token <Lexing.position> NEXT_INT
+%token <Lexing.position> NEXT_BYTE
+%token <Lexing.position> NEXT_LINE*/
 
-%token EOF
+%token <Lexing.position> EOF
 
 %left OP_OR
 %left OP_AND
