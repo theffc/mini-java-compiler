@@ -110,7 +110,15 @@ main_method:
 	;
 
 _method:
-    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES stms=statement* CLOSE_BRACES { Method(name, t, ps, stms) }
+    PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES stms=statement* CLOSE_BRACES 
+    { 
+        Method { 
+        name = name;
+        return_type = t;
+        parameters = ps;
+        body = stms;
+        } 
+    }
 	;
 
 parameters:

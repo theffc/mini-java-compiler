@@ -1,4 +1,4 @@
-
+open Semantic
 (* 
   TERMINAL USAGE:
 - "ocamlbuild -use-menhir main.byte"
@@ -17,3 +17,9 @@ let parse_ast_from_file file =
   let ast = Parser.prog Lexer.token lexbuf in
   let _ = close_in ic in
   ast
+
+let parse_typed_ast_from_file file =
+  let ic = open_in file in
+  let lexbuf = Lexing.from_channel ic in
+  let ast = Parser.prog Lexer.token lexbuf in
+  semantic ast

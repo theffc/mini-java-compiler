@@ -1,5 +1,14 @@
 #directory "_build";;
+
+
+(* A ordem desses loads importa *)
 #load "lexer.cmo";;
 #load "parser.cmo";;
+#load "tabsimb.cmo";;
+#load "ambiente.cmo";;
+#load "semantic.cmo";;
 #load "main.cmo";;
+
+open Ambiente
+open Semantic
 open Main

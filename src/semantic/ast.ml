@@ -7,6 +7,7 @@ and _type =
 	| Bool
 	| Char
 	| String
+    | Void
 (*		  | Array of _type *)
 
 and prog = 
@@ -20,8 +21,12 @@ and mainClassBody =
 and mainMethod = 
 	MainMethod of statement list
 
-and _method = 
-	Method of id * _type * parameter list * statement list
+and _method = Method of {
+        name: id;
+        return_type: _type;
+        parameters: parameter list;
+        body: statement list;
+    }
 
 and parameter = 
 	Parameter of id * _type
