@@ -177,9 +177,14 @@ let add_declared_variable_to_amb amb variable =
   Amb.insere_local amb name t
 
 
-let verify_type_statement (amb: Amb.t) (statement: A.statement) =
+let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement: A.statement)  =
   let open A in
   match statement with
+  | StmReturn(expression) ->
+    let exp_type = infer_expression_type amb expression in
+    if exp_type <> return_type then
+      failwith "a expressao retornada deve ter o mesmo tipo que o retorno declarado pelo metodo"
+
   | StmVarDecl(declared_variables) ->
     List.iter (add_declared_variable_to_amb amb) declared_variables
 
@@ -192,6 +197,34 @@ let verify_type_statement (amb: Amb.t) (statement: A.statement) =
     let exp_type = infer_expression_type amb expression in
     if var_type <> exp_type then
       failwith "Atribuicao: variavel que recebera o resultado deve ter o mesmo tipo que a expressao"
+
+  | StmIf(expression, body, elseBody) -> (
+    let exp_type = infer_expression_type amb expression in
+    if exp_type <> A.Bool then
+      failwith "expressao de condicao do IF deve resultar em um booleano"
+    else
+
+    let amb_if = Amb.novo_escopo amb in
+    List.iter (verify_statement_type return_type amb_if) body;
+
+    match elseBody with
+    | None -> ()
+    | Some(StmElse(body)) -> 
+      let amb_else = Amb.novo_escopo amb in
+      List.iter (verify_statement_type return_type amb_else) body
+    )
+
+  | StmWhile(expression, body) -> 
+    let exp_type = infer_expression_type amb expression in
+    if exp_type <> A.Bool then
+      failwith "expressao de condicao do WHILE deve resultar em um booleano"
+    else
+
+    let amb_while = Amb.novo_escopo amb in
+    List.iter (verify_statement_type return_type amb_while) body
+
+
+
 
 
 let verify_types_inside_method amb m =
@@ -207,7 +240,7 @@ let verify_types_inside_method amb m =
   ;
 
   (* Verifica cada comando presente no corpo da função usando o novo ambiente *)
-  List.iter (verify_type_statement amb_fun) body
+  List.iter (verify_statement_type return_type amb_fun) body
   (* A.DecFun {fn_nome; fn_tiporet; fn_formais; fn_locais; fn_corpo = corpo_tipado} *)
 
 
