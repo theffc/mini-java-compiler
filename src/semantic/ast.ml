@@ -98,7 +98,7 @@ and methodArgument =
 	| MethodArgument of expression 
 
 and expression = 
-	| ExpOperator of expression * operator * expression
+	| ExpOperator of {e1: expression; op: operator; e2: expression}
 	| ExpTerm of term
 	| ExpNotTerm of term
 	| ExpMinusTerm of term

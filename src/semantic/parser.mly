@@ -195,12 +195,20 @@ stm_while:
 
 
 expression:
-    | e1=expression o=operator e2=expression 
-        { ExpOperator(e1,o,e2) }
-    | t=term {ExpTerm t} 
-    | OP_NOT t=term { ExpNotTerm t }
-    | OP_SUB t=term { ExpMinusTerm t } 
-    | OPEN_PARENTESIS e=expression CLOSE_PARENTESIS { e }
+    | e1=expression o=operator e2=expression
+        { ExpOperator {e1=e1; op=o; e2=e2} }
+
+    | t=term
+        {ExpTerm t}
+
+    | OP_NOT t=term 
+        { ExpNotTerm t }
+
+    | OP_SUB t=term
+        { ExpMinusTerm t }
+
+    | OPEN_PARENTESIS e=expression CLOSE_PARENTESIS
+        { e }
     ;
 
 operator:

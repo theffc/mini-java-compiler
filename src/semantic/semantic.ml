@@ -145,9 +145,9 @@ and infer_expression_type (amb: Amb.t) (expression: A.expression): A._type  =
   match expression with
   | ExpTerm(term) -> infer_term_type amb term
   
-  | ExpOperator(exp1, op, exp2) ->
-    let exp1_type = infer_expression_type amb exp1 in
-    let exp2_type = infer_expression_type amb exp2 in
+  | ExpOperator {e1; op; e2} ->
+    let exp1_type = infer_expression_type amb e1 in
+    let exp2_type = infer_expression_type amb e2 in
     
     let op_context = find_operator_context op in
     match op_context with
