@@ -8,6 +8,16 @@ public class micro11
 	}
 
 	public static int verifica() {
+        String x;
 
+        x = "teste";
+
+        String y;
+
+        y = teste(2, "t");
 	}
+
+    public static int teste(int p1, int p2) {
+
+    }
 }
