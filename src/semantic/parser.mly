@@ -1,6 +1,16 @@
 
 %{
-  open Ast
+open Ast
+
+let make_pos (pos: Lexing.position): Ast.filePosition =
+    let line = pos.pos_lnum
+    and col = pos.pos_cnum - pos.pos_bol in
+    (line, col)
+
+let make_id id =
+    let (n, pos) = id in
+    {name = n; pos = make_pos pos}
+
 %}
 
 %token <string * Lexing.position> ID
@@ -76,7 +86,7 @@
 %token <Lexing.position> NEXT_BYTE
 %token <Lexing.position> NEXT_LINE*/
 
-%token <Lexing.position> EOF
+%token EOF
 
 %left OP_OR
 %left OP_AND
@@ -99,25 +109,25 @@ prog:
 
 main_class:
     | PUBLIC CLASS id=ID OPEN_BRACES main=main_method methods=_method* CLOSE_BRACES 
-        { MainClass(id, main, methods) }
+        { MainClass(make_id id, main, methods) }
     ;
 
 main_method:
-	| PUBLIC STATIC VOID MAIN OPEN_PARENTESIS STRING OPEN_BRACKETS CLOSE_BRACKETS ID CLOSE_PARENTESIS OPEN_BRACES stms=statement*  CLOSE_BRACES 
+	| PUBLIC STATIC VOID MAIN pos=OPEN_PARENTESIS STRING OPEN_BRACKETS CLOSE_BRACKETS ID CLOSE_PARENTESIS OPEN_BRACES stms=statement*  CLOSE_BRACES 
         { MainMethod (
-            Method {name = "main"; return_type = Ast.Void; parameters = []; body = stms;} 
+            Method {id={name="main"; pos= make_pos pos}; return_type = Ast.Void; parameters = []; body = stms;} 
         )} 
     ;
 
 _method:
-    | PUBLIC STATIC t=_type name=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES stms=statement* CLOSE_BRACES 
-        { Method {name = name; return_type = t; parameters = ps; body = stms;} }
+    | PUBLIC STATIC t=_type id=ID OPEN_PARENTESIS ps=parameters CLOSE_PARENTESIS OPEN_BRACES stms=statement* CLOSE_BRACES 
+        { Method {id = make_id id; return_type = t; parameters = ps; body = stms;} }
 	;
 
 parameters:
     | ps=separated_list(COMMA, parameter) { ps }
 parameter:
-    | t=_type id=ID { Parameter(id, t)}
+    | t=_type id=ID { Parameter(make_id id, t)}
     ;
 
 _type:
@@ -147,7 +157,7 @@ stm_attr:
 
 stm_var_declaration:
     | t=_type ids=separated_nonempty_list(COMMA, ID) SEMI_COLON 
-        { StmVarDecl(List.map(fun id -> VarDecl(id, t)) ids) }
+        { StmVarDecl(List.map(fun id -> VarDecl(make_id id, t)) ids) }
     ;
 
 stm_print:
@@ -217,29 +227,35 @@ term:
     ;
 
 variable:
-    | id=ID { Var(id) }
-    | id=ID OPEN_BRACKETS e=expression CLOSE_BRACKETS { VarArray(id, e) }
+    | id=ID { Var(make_id id) }
+    | id=ID OPEN_BRACKETS e=expression CLOSE_BRACKETS { VarArray(make_id id, e) }
     | ID PERIOD v=variable { v }
     ;
 
 literal:
-    | l=LIT_BOOL { LitBool(l) }
-    | l=LIT_INT { LitInt(l) }
-    | l=LIT_FLOAT { LitFloat(l) }
-    | l=LIT_DOUBLE { LitDouble(l) }
-    | l=LIT_CHAR { LitChar(l) }
-    | l=LIT_STRING { LitString(l) }
+    | l=LIT_BOOL 
+        { let (t, p) = l in {pos=make_pos p; litType=LitBool(t)} }
+    | l=LIT_INT 
+        { let (t, p) = l in {pos=make_pos p; litType=LitInt(t)} }
+    | l=LIT_FLOAT 
+        { let (t, p) = l in {pos=make_pos p; litType=LitFloat(t)} }
+    | l=LIT_DOUBLE 
+        { let (t, p) = l in {pos=make_pos p; litType=LitDouble(t)} }
+    | l=LIT_CHAR 
+        { let (t, p) = l in {pos=make_pos p; litType=LitChar(t)} }
+    | l=LIT_STRING 
+        { let (t, p) = l in {pos=make_pos p; litType=LitString(t)} }
     ;
 
 
 /* ESSA PARTE DE CHAMADA DE METODO TA DANDO MUITO PROBLEMA */
 
 method_call:
-    | name=ID OPEN_PARENTESIS args=method_args CLOSE_PARENTESIS 
-        { MethodCall(name, args) }
+    | id=ID OPEN_PARENTESIS args=method_args CLOSE_PARENTESIS 
+        { MethodCall(make_id id, args) }
 
-    | receiver=variable PERIOD name=ID OPEN_PARENTESIS args=method_args CLOSE_PARENTESIS
-        { MethodCallThroughType(receiver, name, args) }
+    | receiver=variable PERIOD id=ID OPEN_PARENTESIS args=method_args CLOSE_PARENTESIS
+        { MethodCallThroughType(receiver, make_id id, args) }
     ;
 
 method_args:

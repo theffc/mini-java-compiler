@@ -106,8 +106,8 @@ let find_method (amb: Amb.t) (id: string): Amb.entrada_fn =
 let rec infer_term_type (amb: Amb.t) (term: A.term): A._type =
   let open A in
   match term with
-  | TermLiteral(literal) ->
-    ( match literal with
+  | TermLiteral {litType} ->
+    ( match litType with
       | LitBool(_) -> Bool
       | LitInt(_) -> Int
       | LitFloat(_) -> Float
@@ -116,8 +116,8 @@ let rec infer_term_type (amb: Amb.t) (term: A.term): A._type =
       | LitString(_) -> String
     )
 
-  | TermVariable(Var(id)) ->
-    find_var_type amb id
+  | TermVariable(Var id) ->
+    find_var_type amb id.name
 
   | TermMethodCall(m) ->
     verify_method_call amb m
@@ -148,7 +148,7 @@ and verify_method_call (amb: Amb.t) (m: A.methodCall): A._type =
   in
 
   let open Amb in
-  let {tipo_fn; formais = parameters} = find_method amb id in
+  let {tipo_fn; formais = parameters} = find_method amb id.name in
 
   let ps_types = List.map (fun p -> let (_, p_type) = p in p_type ) parameters in
 
@@ -172,8 +172,8 @@ and verify_method_call (amb: Amb.t) (m: A.methodCall): A._type =
 
 
 let add_variable_to_amb amb variable =
-  let A.VarDecl(name, t) = variable in
-  Amb.insere_local amb name t
+  let A.VarDecl(id, t) = variable in
+  Amb.insere_local amb id.name t
 
 
 let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement: A.statement)  =
@@ -192,7 +192,7 @@ let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement: A.
     ()
 
   | StmAttr(Var(id), expression) ->
-    let var_type = find_var_type amb id in
+    let var_type = find_var_type amb id.name in
     let exp_type = infer_expression_type amb expression in
     if var_type <> exp_type then
       failwith "Atribuicao: variavel que recebera o resultado deve ter o mesmo tipo que a expressao"
@@ -234,8 +234,8 @@ let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement: A.
 
 
 let add_parameter_to_ambient (amb: Amb.t) (parameter: A.parameter) =
-  let A.Parameter (name, t) = parameter in
-  Amb.insere_param amb name t
+  let A.Parameter (id, t) = parameter in
+  Amb.insere_param amb id.name t
 
 
 let verify_types_inside_method amb m =
@@ -254,11 +254,11 @@ let add_method_to_ambient (amb: Amb.t) (_method: A._method) =
   let A.Method m = _method in
   let parameters = 
     List.map
-      (fun p -> let Parameter(name, _type) = p in (name, _type)) 
+      (fun p -> let Parameter(id, _type) = p in (id.name, _type)) 
       m.parameters
   in
 
-  Amb.insere_fun amb m.name parameters m.return_type
+  Amb.insere_fun amb m.id.name parameters m.return_type
 
 
 (* Lista de cabeçalhos das funções pré definidas *)

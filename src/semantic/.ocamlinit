@@ -9,6 +9,7 @@
 #load "semantic.cmo";;
 #load "main.cmo";;
 
+open Ast
 open Ambiente
 open Semantic
 open Main

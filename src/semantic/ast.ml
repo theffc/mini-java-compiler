@@ -1,5 +1,11 @@
 
-type id = string
+(* posição no arquivo fonte *)
+type filePosition = int * int
+
+and id = {
+    name: string;
+    pos: filePosition
+}
 
 and _type = 
 	| Int
@@ -11,8 +17,6 @@ and _type =
     | Void
 (*		  | Array of _type *)
 
-and pos = Lexing.position (* tipo e posição no arquivo fonte *)
-
 and prog = 
 	Prog of mainClass
 
@@ -23,7 +27,7 @@ and mainMethod =
 	MainMethod of _method
 
 and _method = Method of {
-        name: id;
+        id: id;
         return_type: _type;
         parameters: parameter list;
         body: statement list;
@@ -68,20 +72,25 @@ and operator =
     | OpGreater
     | OpGreaterEqual
 
-and literal =
-    | LitBool of bool * pos
-    | LitInt of int * pos
-    | LitFloat of float * pos
-    | LitDouble of float * pos
-    | LitChar of char * pos
-    | LitString of string * pos
+and litType = 
+    | LitBool of bool
+    | LitInt of int
+    | LitFloat of float
+    | LitDouble of float
+    | LitChar of char
+    | LitString of string
+
+and literal = {
+    pos: filePosition;
+    litType: litType
+}
 
 and methodCall = 
 	| MethodCall of id * methodArgument list
 	| MethodCallThroughType of variable * id * methodArgument list
 
 and methodArgument = 
-	MethodArgument of expression 
+	| MethodArgument of expression 
 
 and expression = 
 	| ExpOperator of expression * operator * expression
