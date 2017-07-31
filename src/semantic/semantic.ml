@@ -38,6 +38,11 @@ let type_to_str (t: A._type) : string =
   | Void -> "Void"
 
 
+let position_msg_error (pos: int * int) : string =
+  let (l, c) = pos in
+  "ERROR (line " ^ string_of_int l ^ " column " ^ string_of_int c ^ "): "
+
+
 let infer_arithmetical_operation_type (exp1_type: A._type) (exp2_type: A._type) : A._type =
   if exp1_type <> exp2_type then
     failwith "Operador Aritmetico so pode ser usado com expressoes de mesmo tipo"
@@ -75,32 +80,36 @@ let infer_relational_operation_type (exp1_type: A._type) (exp2_type: A._type) : 
   | _ -> Bool
 
 
-let find_var_type (amb: Amb.t) (id: string) : A._type =
+let find_var_type (amb: Amb.t) (id: A.id) : A._type =
   try 
-    (match (Amb.busca amb id) with
+    (match (Amb.busca amb id.name) with
       | Amb.EntVar _type -> _type
       | Amb.EntFun _ ->
-        let msg = "nome de funcao usado como nome de variavel: " ^ id in
-        failwith msg
+        let error = position_msg_error id.pos in
+        let msg = "nome de funcao usado como nome de variavel: " ^ id.name in
+        failwith (error ^ msg)
     )
   with Not_found ->
-    let msg = "A variavel " ^ id ^ " nao foi declarada" in
-    failwith msg
+    let error = position_msg_error id.pos in
+    let msg = "A variavel " ^ id.name ^ " nao foi declarada" in
+    failwith (error ^ msg)
   
 
-let find_method (amb: Amb.t) (id: string): Amb.entrada_fn =
+let find_method (amb: Amb.t) (id: A.id): Amb.entrada_fn =
   try 
     (match (Amb.busca amb id) with
       | Amb.EntFun (fun_data) -> 
         fun_data
 
       | Amb.EntVar _ -> 
+        let error = position_msg_error id.pos in
         let msg = "nome de variavel usada como nome de funcao: " ^ id in
-        failwith msg 
+        failwith (error ^ msg) 
     )
   with Not_found ->
+    let error = position_msg_error id.pos in
     let msg = "A funcao " ^ id ^ " nao foi declarada" in
-    failwith msg
+    failwith (error ^ msg)
 
 
 let rec infer_term_type (amb: Amb.t) (term: A.term): A._type =
@@ -117,7 +126,7 @@ let rec infer_term_type (amb: Amb.t) (term: A.term): A._type =
     )
 
   | TermVariable(Var id) ->
-    find_var_type amb id.name
+    find_var_type amb id
 
   | TermMethodCall(m) ->
     verify_method_call amb m
@@ -148,7 +157,7 @@ and verify_method_call (amb: Amb.t) (m: A.methodCall): A._type =
   in
 
   let open Amb in
-  let {tipo_fn; formais = parameters} = find_method amb id.name in
+  let {tipo_fn; formais = parameters} = find_method amb id in
 
   let ps_types = List.map (fun p -> let (_, p_type) = p in p_type ) parameters in
 
@@ -163,7 +172,10 @@ and verify_method_call (amb: Amb.t) (m: A.methodCall): A._type =
 
   List.map2 
     (fun a_t p_t -> 
-      if a_t <> p_t then failwith "Argumentos com tipos diferentes do esperado"
+      if a_t <> p_t then 
+        let error = position_msg_error id.pos in
+        let msg = "Argumentos com tipos diferentes do esperado" in
+        failwith (error ^ msg)
     )
     args_types ps_types
   ;
@@ -192,10 +204,12 @@ let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement: A.
     ()
 
   | StmAttr(Var(id), expression) ->
-    let var_type = find_var_type amb id.name in
+    let var_type = find_var_type amb id in
     let exp_type = infer_expression_type amb expression in
     if var_type <> exp_type then
-      failwith "Atribuicao: variavel que recebera o resultado deve ter o mesmo tipo que a expressao"
+      let error = position_msg_error id.pos in
+      let msg = "Atribuicao: variavel que recebera o resultado deve ter o mesmo tipo que a expressao" in
+      failwith (error ^ msg)
 
   | StmIf(expression, body, elseBody) -> (
     let exp_type = infer_expression_type amb expression in
