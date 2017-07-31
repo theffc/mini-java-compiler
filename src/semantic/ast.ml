@@ -57,7 +57,7 @@ and stmElse =
 and varDeclaration =
 	VarDecl of id * _type
 
-and operator =
+and opType =
 	| OpAdd
     | OpSub
     | OpMul
@@ -71,6 +71,11 @@ and operator =
     | OpDif
     | OpGreater
     | OpGreaterEqual
+
+and operator = {
+    pos: filePosition;
+    opType: opType
+}
 
 and litType = 
     | LitBool of bool

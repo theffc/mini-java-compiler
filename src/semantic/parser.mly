@@ -204,19 +204,32 @@ expression:
     ;
 
 operator:
-    | OP_ADD { OpAdd }
-    | OP_SUB { OpSub }
-    | OP_MUL { OpMul }
-    | OP_DIV { OpDiv }
-    | OP_MOD { OpMod }
-    | OP_AND { OpAnd }
-    | OP_OR { OpOr }
-    | OP_LESS { OpLess }
-    | OP_LESS_EQUAL { OpLessEqual }
-    | OP_EQUAL { OpEqual }
-    | OP_DIF { OpDif }
-    | OP_GREATER { OpGreater }
-    | OP_GREATER_EQUAL { OpGreaterEqual }
+    | p=OP_ADD 
+        { {pos = make_pos p; opType = OpAdd} }
+    | p=OP_SUB 
+        { {pos = make_pos p; opType = OpSub} }
+    | p=OP_MUL 
+        { {pos = make_pos p; opType = OpMul} }
+    | p=OP_DIV 
+        { {pos = make_pos p; opType = OpDiv} }
+    | p=OP_MOD 
+        { {pos = make_pos p; opType = OpMod} }
+    | p=OP_AND 
+        { {pos = make_pos p; opType = OpAnd} }
+    | p=OP_OR 
+        { {pos = make_pos p; opType = OpOr} }
+    | p=OP_LESS 
+        { {pos = make_pos p; opType = OpLess} }
+    | p=OP_LESS_EQUAL 
+        { {pos = make_pos p; opType = OpLessEqual} }
+    | p=OP_EQUAL 
+        { {pos = make_pos p; opType = OpEqual} }
+    | p=OP_DIF 
+        { {pos = make_pos p; opType = OpDif} }
+    | p=OP_GREATER 
+        { {pos = make_pos p; opType = OpGreater} }
+    | p=OP_GREATER_EQUAL 
+        { {pos = make_pos p; opType = OpGreaterEqual} }
     ;
 
 term:

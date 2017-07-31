@@ -1,11 +1,11 @@
 module Amb = Ambiente
 module A = Ast
 
-type operator_type = Arithmetical | Logical | Relational
+type operator_context = Arithmetical | Logical | Relational
 
-let find_operator_type (op: A.operator): operator_type =
+let find_operator_context (op: A.operator): operator_context =
   let open A in
-  match op with
+  match op.opType with
   | OpAdd
   | OpSub
   | OpMul
@@ -38,14 +38,17 @@ let type_to_str (t: A._type) : string =
   | Void -> "Void"
 
 
-let position_msg_error (pos: int * int) : string =
+let position_msg_error (pos: A.filePosition) : string =
   let (l, c) = pos in
   "ERROR (line " ^ string_of_int l ^ " column " ^ string_of_int c ^ "): "
 
 
-let infer_arithmetical_operation_type (exp1_type: A._type) (exp2_type: A._type) : A._type =
+let infer_arithmetical_operation_type (exp1_type: A._type) (exp2_type: A._type) (pos: A.filePosition) : A._type =
+  let error = position_msg_error pos in
+
   if exp1_type <> exp2_type then
-    failwith "Operador Aritmetico so pode ser usado com expressoes de mesmo tipo"
+    let msg = "Operador Aritmetico so pode ser usado com expressoes de mesmo tipo" in
+    failwith (error ^ msg)
   else
 
   let open A in
@@ -53,30 +56,35 @@ let infer_arithmetical_operation_type (exp1_type: A._type) (exp2_type: A._type) 
   | Int | Float | Double -> exp1_type
 
   | _ -> 
-    failwith ("Operador Aritmetico nao pode ser usado para expressoes de tipo " ^ type_to_str exp1_type)
+    let msg = "Operador Aritmetico nao pode ser usado para expressoes de tipo " ^ type_to_str exp1_type in
+    failwith (error ^ msg)
 
 
-let infer_logical_operation_type (exp1_type: A._type) (exp2_type: A._type) : A._type =
+let infer_logical_operation_type (exp1_type: A._type) (exp2_type: A._type) (pos: A.filePosition) : A._type =
+  let error = position_msg_error pos in
   let msg = "Operador Logico so pode ser usado com expressoes de tipo Bool" in
+
   if exp1_type <> exp2_type then
-    failwith msg
+    failwith (error ^ msg)
   else
 
   let open A in
   match exp1_type with
   | Bool -> Bool
-  | _ -> failwith msg
+  | _ -> failwith (error ^ msg)
 
 
-let infer_relational_operation_type (exp1_type: A._type) (exp2_type: A._type) : A._type =
+let infer_relational_operation_type (exp1_type: A._type) (exp2_type: A._type) (pos: A.filePosition) : A._type =
+  let error = position_msg_error pos in
+
   if exp1_type <> exp2_type then
-    failwith "Operador Relacional so pode ser usado com expressoes de mesmo tipo"
+    failwith (error ^ "Operador Relacional so pode ser usado com expressoes de mesmo tipo")
   else
 
   let open A in
   match exp1_type with
   | Void  ->
-    failwith "Operador Relacional nao pode ser usado para expressoes de tipo Void"
+    failwith (error ^ "Operador Relacional nao pode ser usado para expressoes de tipo Void")
   | _ -> Bool
 
 
@@ -97,18 +105,18 @@ let find_var_type (amb: Amb.t) (id: A.id) : A._type =
 
 let find_method (amb: Amb.t) (id: A.id): Amb.entrada_fn =
   try 
-    (match (Amb.busca amb id) with
+    (match (Amb.busca amb id.name) with
       | Amb.EntFun (fun_data) -> 
         fun_data
 
       | Amb.EntVar _ -> 
         let error = position_msg_error id.pos in
-        let msg = "nome de variavel usada como nome de funcao: " ^ id in
+        let msg = "nome de variavel usada como nome de funcao: " ^ id.name in
         failwith (error ^ msg) 
     )
   with Not_found ->
     let error = position_msg_error id.pos in
-    let msg = "A funcao " ^ id ^ " nao foi declarada" in
+    let msg = "A funcao " ^ id.name ^ " nao foi declarada" in
     failwith (error ^ msg)
 
 
@@ -141,12 +149,11 @@ and infer_expression_type (amb: Amb.t) (expression: A.expression): A._type  =
     let exp1_type = infer_expression_type amb exp1 in
     let exp2_type = infer_expression_type amb exp2 in
     
-    let op_type = find_operator_type op in
-
-    match op_type with
-    | Arithmetical -> infer_arithmetical_operation_type exp1_type exp2_type
-    | Logical -> infer_logical_operation_type exp1_type exp2_type
-    | Relational -> infer_relational_operation_type exp1_type exp2_type
+    let op_context = find_operator_context op in
+    match op_context with
+    | Arithmetical -> infer_arithmetical_operation_type exp1_type exp2_type op.pos
+    | Logical -> infer_logical_operation_type exp1_type exp2_type op.pos
+    | Relational -> infer_relational_operation_type exp1_type exp2_type op.pos
 
 
 and verify_method_call (amb: Amb.t) (m: A.methodCall): A._type =
