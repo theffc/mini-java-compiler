@@ -1,7 +1,8 @@
+
 type id = string
 
 and _type = 
-	  Int
+	| Int
 	| Float
 	| Double
 	| Bool
@@ -14,12 +15,10 @@ and prog =
 	Prog of mainClass
 
 and mainClass = 
-	MainClass of id * mainClassBody
-and mainClassBody = 
-	MainClassBody of mainMethod * _method list
+	MainClass of id * mainMethod * _method list
 
 and mainMethod = 
-	MainMethod of statement list
+	MainMethod of _method
 
 and _method = Method of {
         name: id;
@@ -35,7 +34,7 @@ and parameter =
 and statement = Statement of  *)
 
 and statement = 
-	  StmAttr of variable * expression
+	| StmAttr of variable * expression
     | StmVarDecl of varDeclaration list
     | StmMethodCall of methodCall
     | StmPrint of expression
@@ -46,14 +45,14 @@ and statement =
     | StmNewObj of newObj
 
 and stmElse = 
-	  StmElse of statement list
+	StmElse of statement list
 	(* | StmElseIf of expression * statement list * stmElse option *)
 
 and varDeclaration =
 	VarDecl of id * _type
 
 and operator =
-	  OpAdd
+	| OpAdd
     | OpSub
     | OpMul
     | OpDiv
@@ -68,7 +67,7 @@ and operator =
     | OpGreaterEqual
 
 and literal =
-      LitBool of bool
+    | LitBool of bool
     | LitInt of int
     | LitFloat of float
     | LitDouble of float
@@ -77,26 +76,26 @@ and literal =
 
 
 and methodCall = 
-	  MethodCall of id * methodArgument list
+	|  MethodCall of id * methodArgument list
 	| MethodCallThroughType of variable * id * methodArgument list
 
 and methodArgument = 
 	MethodArgument of expression 
 
 and expression = 
-	  ExpOperator of expression * operator * expression
+	| ExpOperator of expression * operator * expression
 	| ExpTerm of term
 	| ExpNotTerm of term
 	| ExpMinusTerm of term
 
 and term = 
-	  TermLiteral of literal
+	| TermLiteral of literal
 	| TermVariable of variable
 	| TermMethodCall of methodCall
 	| TermNewObj of newObj
 
 and variable =
-	  Var of id
+	| Var of id
 	| VarArray of id * expression
 
 and newObj = 

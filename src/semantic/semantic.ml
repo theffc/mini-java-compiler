@@ -45,10 +45,11 @@ let infer_arithmetical_operation_type (exp1_type: A._type) (exp2_type: A._type) 
 
   let open A in
   match exp1_type with
-  | Int | Float | Double  ->
-    exp1_type
+  | Int | Float | Double -> exp1_type
+
   | _ -> 
     failwith ("Operador Aritmetico nao pode ser usado para expressoes de tipo " ^ type_to_str exp1_type)
+
 
 let infer_logical_operation_type (exp1_type: A._type) (exp2_type: A._type) : A._type =
   let msg = "Operador Logico so pode ser usado com expressoes de tipo Bool" in
@@ -58,10 +59,9 @@ let infer_logical_operation_type (exp1_type: A._type) (exp2_type: A._type) : A._
 
   let open A in
   match exp1_type with
-  | Bool ->
-    Bool
-  | _ -> 
-    failwith msg
+  | Bool -> Bool
+  | _ -> failwith msg
+
 
 let infer_relational_operation_type (exp1_type: A._type) (exp2_type: A._type) : A._type =
   if exp1_type <> exp2_type then
@@ -72,8 +72,7 @@ let infer_relational_operation_type (exp1_type: A._type) (exp2_type: A._type) : 
   match exp1_type with
   | Void  ->
     failwith "Operador Relacional nao pode ser usado para expressoes de tipo Void"
-  | _ -> 
-    Bool
+  | _ -> Bool
 
 
 let find_var_type (amb: Amb.t) (id: string) : A._type =
@@ -172,7 +171,7 @@ and verify_method_call (amb: Amb.t) (m: A.methodCall): A._type =
   tipo_fn
 
 
-let add_declared_variable_to_amb amb variable =
+let add_variable_to_amb amb variable =
   let A.VarDecl(name, t) = variable in
   Amb.insere_local amb name t
 
@@ -186,7 +185,7 @@ let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement: A.
       failwith "a expressao retornada deve ter o mesmo tipo que o retorno declarado pelo metodo"
 
   | StmVarDecl(declared_variables) ->
-    List.iter (add_declared_variable_to_amb amb) declared_variables
+    List.iter (add_variable_to_amb amb) declared_variables
 
   | StmMethodCall(m) ->
     verify_method_call amb m;
@@ -223,40 +222,44 @@ let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement: A.
     let amb_while = Amb.novo_escopo amb in
     List.iter (verify_statement_type return_type amb_while) body
 
+  | StmPrint(expression) ->
+    let exp_type = infer_expression_type amb expression in
+    if exp_type <> A.String then
+      failwith "comando print deve ser utilizado com tipos string"
+
+  | StmPrintLn(expression) ->
+    let exp_type = infer_expression_type amb expression in
+    if exp_type <> A.String then
+      failwith "comando println deve ser utilizado com tipos strings"
 
 
+let add_parameter_to_ambient (amb: Amb.t) (parameter: A.parameter) =
+  let A.Parameter (name, t) = parameter in
+  Amb.insere_param amb name t
 
 
 let verify_types_inside_method amb m =
   let A.Method {return_type; body; parameters} = m in
 
   let amb_fun = Amb.novo_escopo amb in
-  List.iter 
-    ( fun p ->
-      let A.Parameter (name, t) = p in
-      Amb.insere_param amb_fun name t
-    )
-    parameters
-  ;
+  List.iter (add_parameter_to_ambient amb) parameters;
 
   (* Verifica cada comando presente no corpo da função usando o novo ambiente *)
   List.iter (verify_statement_type return_type amb_fun) body
   (* A.DecFun {fn_nome; fn_tiporet; fn_formais; fn_locais; fn_corpo = corpo_tipado} *)
 
 
-let add_methods_to_ambient amb methods =
+let add_method_to_ambient (amb: Amb.t) (_method: A._method) =
   let open A in
-  List.iter 
-    ( fun x -> 
-      let Method m = x in
-      let ps = 
-        List.map
-          (fun p -> let Parameter(name, _type) = p in (name, _type)) 
-          m.parameters
-      in
-      Amb.insere_fun amb m.name ps m.return_type
-    )
-    methods
+  let A.Method m = _method in
+  let parameters = 
+    List.map
+      (fun p -> let Parameter(name, _type) = p in (name, _type)) 
+      m.parameters
+  in
+
+  Amb.insere_fun amb m.name parameters m.return_type
+
 
 (* Lista de cabeçalhos das funções pré definidas *)
 let predefined_functions = 
@@ -273,19 +276,19 @@ let add_predefined_methods_to_ambient amb =
     predefined_functions
 
 
-let semantic ast =
+let semantic (ast: A.prog) =
   (* cria ambiente global inicialmente vazio *)
   let amb_global = Amb.novo_amb [] in
 
   add_predefined_methods_to_ambient amb_global;
 
-  let (A.Prog (A.MainClass (_class_name, A.MainClassBody (main_method, methods)))) = ast in
+  let A.Prog (A.MainClass (_class_name, MainMethod(main_method), methods)) = ast in
 
-  add_methods_to_ambient amb_global methods;
+  List.iter (add_method_to_ambient amb_global) methods;
 
   List.map (verify_types_inside_method amb_global) methods;
 
-  amb_global
+  verify_types_inside_method amb_global main_method;
 
 
 
