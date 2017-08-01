@@ -41,7 +41,7 @@ and parameter =
 and statement = Statement of  *)
 
 and 'exp statement = 
-	| StmAttr of 'exp variable * 'exp
+	| StmAttr of variable * 'exp
     | StmVarDecl of varDeclaration list
     | StmMethodCall of 'exp methodCall
     | StmPrint of 'exp
@@ -49,7 +49,6 @@ and 'exp statement =
     | StmIf of 'exp * 'exp statement list * 'exp stmElse option
     | StmReturn of 'exp
     | StmWhile of 'exp * 'exp statement list
-    | StmNewObj of 'exp newObj
 
 and 'exp stmElse = 
 	StmElse of 'exp statement list
@@ -92,20 +91,10 @@ and literal = {
 
 and 'exp methodCall = 
 	| MethodCall of id * 'exp methodArgument list
-	| MethodCallThroughType of 'exp variable * id * 'exp methodArgument list
+	| MethodCallThroughType of variable * id * 'exp methodArgument list
 
 and 'exp methodArgument = 
 	| MethodArgument of 'exp 
 
-and 'exp term = 
-	| TermLiteral of literal
-	| TermVariable of 'exp variable
-	| TermMethodCall of 'exp methodCall
-	| TermNewObj of 'exp newObj
-
-and 'exp variable =
+and variable =
 	| Var of id
-	| VarArray of id * 'exp
-
-and 'exp newObj = 
-	NewObj of 'exp methodCall

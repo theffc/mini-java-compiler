@@ -1,5 +1,4 @@
-module S = Semantic
-module A = Ast
+module X = Semantic
 
 (* 
   TERMINAL USAGE:
@@ -24,5 +23,4 @@ let parse_typed_ast_from_file file =
   let ic = open_in file in
   let lexbuf = Lexing.from_channel ic in
   let ast = Parser.prog Lexer.token lexbuf in
-  S.semantic ast;
-  ast
+  X.semantic ast

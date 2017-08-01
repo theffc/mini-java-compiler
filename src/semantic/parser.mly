@@ -142,7 +142,6 @@ statement:
     | s=stm_attr { s }
     | s=stm_var_declaration { s }
     | s=method_call SEMI_COLON { StmMethodCall(s) }
-    | s=new_obj SEMI_COLON { StmNewObj(s) }
     | s=stm_return { s }
     | s=stm_print { s }
     | s=stm_if { s }
@@ -197,14 +196,9 @@ expression:
     | e1=expression o=operator e2=expression
         { ExpOperator {e1=e1; op=o; e2=e2} }
 
-    | t=term
-        {ExpTerm t}
-
-    | OP_NOT t=term 
-        { ExpNotTerm t }
-
-    | OP_SUB t=term
-        { ExpMinusTerm t }
+    | l=literal { ExpLiteral(l) }
+    | v=variable { ExpVariable(v) }
+    | m=method_call { ExpMethodCall(m) }
 
     | OPEN_PARENTESIS e=expression CLOSE_PARENTESIS
         { e }
@@ -239,16 +233,9 @@ operator:
         { {pos = make_pos p; opType = OpGreaterEqual} }
     ;
 
-term:
-    | l=literal { TermLiteral(l) }
-    | v=variable { TermVariable(v) }
-    | m=method_call { TermMethodCall(m) }
-    | n=new_obj { TermNewObj(n) }
-    ;
-
 variable:
     | id=ID { Var(make_id id) }
-    | id=ID OPEN_BRACKETS e=expression CLOSE_BRACKETS { VarArray(make_id id, e) }
+    /*| id=ID OPEN_BRACKETS e=expression CLOSE_BRACKETS { VarArray(make_id id, e) }*/
     | ID PERIOD v=variable { v }
     ;
 
@@ -281,8 +268,5 @@ method_call:
 method_args:
     | exprs=separated_list(COMMA, expression)
         {  List.map (fun expr -> MethodArgument(expr)) exprs }
-
-new_obj:
-    | NEW m=method_call { NewObj(m) }
     ;
 

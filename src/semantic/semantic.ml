@@ -123,37 +123,17 @@ let find_method (amb: Amb.t) (id: A.id): Amb.entrada_fn =
     failwith (error ^ msg)
 
 
-let rec infer_term_type (amb: Amb.t) (term: S.exp A.term): A._type =
+type 'e typed_expression = {
+  t: A._type;
+  e: 'e;
+}
+
+let rec infer_expression_type (amb: Amb.t) (expression: S.exp) : T.exp typed_expression =
   let open A in
-  match term with
-  | TermLiteral {litType} ->
-    ( match litType with
-      | LitBool(_) -> Bool
-      | LitInt(_) -> Int
-      | LitFloat(_) -> Float
-      | LitDouble(_) -> Double
-      | LitChar(_) -> Char
-      | LitString(_) -> String
-    )
-
-  | TermVariable(Var id) ->
-    find_var_type amb id
-
-  | TermMethodCall(m) ->
-    verify_method_call amb m
-
-
-and infer_expression_type (amb: Amb.t) (expression: S.exp) =
-  let open A in
-  match expression with
-  | ExpTerm(term) -> 
-    let t = infer_term_type amb term in
-    let t_e = T.ExpTerm(term, t) in
-    {t=t; e = t_e}
-  
+  match expression with  
   | ExpOperator {e1; op; e2} -> (
-    let exp1_type = infer_expression_type amb e1 in
-    let exp2_type = infer_expression_type amb e2 in
+    let {t=exp1_type; e=t_e1} = infer_expression_type amb e1 in
+    let {t=exp2_type; e=t_e2} = infer_expression_type amb e2 in
     
     let op_context = find_operator_context op in
     let t = (
@@ -161,12 +141,31 @@ and infer_expression_type (amb: Amb.t) (expression: S.exp) =
       | Arithmetical -> infer_arithmetical_operation_type exp1_type exp2_type op.pos
       | Logical -> infer_logical_operation_type exp1_type exp2_type op.pos
       | Relational -> infer_relational_operation_type exp1_type exp2_type op.pos
-      ) 
-    in
-    {t= t; e= {e1=e1; op=op; e2=e2; expType=t} }
+    ) in
+    {t; e= T.ExpOperator{e1=t_e1; op=op; e2=t_e2; expType=t} }
   )
 
-and verify_method_call (amb: Amb.t) (m:S.exp A.methodCall): A._type =
+  | ExpLiteral l ->
+    ( match l.litType with
+      | LitBool(_) -> let t = Bool in {t; e= T.ExpLiteral (l, t)}
+      | LitInt(_) -> let t = Int in {t; e= T.ExpLiteral (l, t)}
+      | LitFloat(_) -> let t = Float in {t; e=T.ExpLiteral (l, t)}
+      | LitDouble(_) -> let t = Double in {t; e=T.ExpLiteral (l, t)}
+      | LitChar(_) -> let t = Char in {t; e=T.ExpLiteral (l, t)}
+      | LitString(_) -> let t = String in {t; e=T.ExpLiteral (l, t)}
+    )
+
+  | ExpVariable(Var id) ->
+    let t = find_var_type amb id in
+    {t; e=T.ExpVariable(Var id, t)}
+
+
+  | ExpMethodCall(m) ->
+    let {t; e} = verify_method_call amb m in
+    {t; e=T.ExpMethodCall(e)}
+
+
+and verify_method_call (amb: Amb.t) (m:S.exp A.methodCall): (T.exp A.methodCall) typed_expression =
   let (id, arguments) = 
     match m with
     | A.MethodCall(id, arguments) -> (id, arguments)
@@ -178,14 +177,16 @@ and verify_method_call (amb: Amb.t) (m:S.exp A.methodCall): A._type =
 
   let ps_types = List.map (fun p -> let (_, p_type) = p in p_type ) parameters in
 
-  let args_types = 
+  let typed_args = 
     List.map 
       (fun a -> 
         let A.MethodArgument (expression) = a in 
         infer_expression_type amb expression
-      ) 
+      )
       arguments
   in
+
+  let args_types = List.map (fun x -> x.t) typed_args in
 
   List.map2 
     (fun a_t p_t -> 
@@ -197,7 +198,9 @@ and verify_method_call (amb: Amb.t) (m:S.exp A.methodCall): A._type =
     args_types ps_types
   ;
 
-  tipo_fn
+  let args = List.map (fun x -> A.MethodArgument(x.e)) typed_args in
+
+  {t= tipo_fn; e= A.MethodCall(id, args)}
 
 
 let add_variable_to_amb amb variable =
@@ -205,63 +208,76 @@ let add_variable_to_amb amb variable =
   Amb.insere_local amb id.name t
 
 
-let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement:S.exp A.statement)  =
+let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement:S.exp A.statement) : T.exp A.statement =
   let open A in
   match statement with
   | StmReturn(expression) ->
-    let exp_type = infer_expression_type amb expression in
-    if exp_type <> return_type then
+    let {t; e} = infer_expression_type amb expression in
+    if t <> return_type then
       failwith "a expressao retornada deve ter o mesmo tipo que o retorno declarado pelo metodo"
+    else
+      StmReturn(e)
 
   | StmVarDecl(declared_variables) ->
-    List.iter (add_variable_to_amb amb) declared_variables
+    List.iter (add_variable_to_amb amb) declared_variables;
+    StmVarDecl(declared_variables)
 
   | StmMethodCall(m) ->
-    verify_method_call amb m;
-    ()
+    let {t; e} = verify_method_call amb m in
+    StmMethodCall(e)
 
   | StmAttr(Var(id), expression) ->
     let var_type = find_var_type amb id in
-    let exp_type = infer_expression_type amb expression in
+    let {t=exp_type; e} = infer_expression_type amb expression in
     if var_type <> exp_type then
       let error = position_msg_error id.pos in
       let msg = "Atribuicao: variavel que recebera o resultado deve ter o mesmo tipo que a expressao" in
       failwith (error ^ msg)
+    else
+      StmAttr(Var(id), e)
 
-  | StmIf(expression, body, elseBody) -> (
-    let exp_type = infer_expression_type amb expression in
-    if exp_type <> A.Bool then
+  | StmIf(expression, body, elseBody) ->
+    let {t; e} = infer_expression_type amb expression in
+    if t <> A.Bool then
       failwith "expressao de condicao do IF deve resultar em um booleano"
     else
 
     let amb_if = Amb.novo_escopo amb in
-    List.iter (verify_statement_type return_type amb_if) body;
+    let typed_body = List.map (verify_statement_type return_type amb_if) body in
 
-    match elseBody with
-    | None -> ()
-    | Some(StmElse(body)) -> 
+    ( match elseBody with
+    | None -> 
+      StmIf(e, typed_body, None)
+
+    | Some(StmElse(body)) ->
       let amb_else = Amb.novo_escopo amb in
-      List.iter (verify_statement_type return_type amb_else) body
+      let else_t_body = List.map (verify_statement_type return_type amb_else) body in
+      StmIf(e, typed_body, Some(StmElse(else_t_body)))
     )
 
   | StmWhile(expression, body) -> 
-    let exp_type = infer_expression_type amb expression in
-    if exp_type <> A.Bool then
+    let {t; e} = infer_expression_type amb expression in
+    if t <> A.Bool then
       failwith "expressao de condicao do WHILE deve resultar em um booleano"
     else
 
     let amb_while = Amb.novo_escopo amb in
-    List.iter (verify_statement_type return_type amb_while) body
+    let typed_body = List.map (verify_statement_type return_type amb_while) body in
+    StmWhile(e, typed_body)
 
   | StmPrint(expression) ->
-    let exp_type = infer_expression_type amb expression in
-    if exp_type <> A.String then
+    let {t; e} = infer_expression_type amb expression in
+    if t <> A.String then
       failwith "comando print deve ser utilizado com tipos string"
+    else
+      StmPrint(e)
 
   | StmPrintLn(expression) ->
-    let exp_type = infer_expression_type amb expression in
-    if exp_type <> A.String then
+    let {t; e} = infer_expression_type amb expression in
+    if t <> A.String then
       failwith "comando println deve ser utilizado com tipos strings"
+    else
+      StmPrintLn(e)
 
 
 let add_parameter_to_ambient (amb: Amb.t) (parameter: A.parameter) =
@@ -269,15 +285,15 @@ let add_parameter_to_ambient (amb: Amb.t) (parameter: A.parameter) =
   Amb.insere_param amb id.name t
 
 
-let verify_types_inside_method amb m =
-  let A.Method {return_type; body; parameters} = m in
+let verify_types_inside_method (amb: Amb.t) (m: S.exp A._method) : T.exp A._method =
+  let A.Method {id; return_type; body; parameters} = m in
 
   let amb_fun = Amb.novo_escopo amb in
   List.iter (add_parameter_to_ambient amb) parameters;
 
   (* Verifica cada comando presente no corpo da função usando o novo ambiente *)
-  List.iter (verify_statement_type return_type amb_fun) body
-  (* A.DecFun {fn_nome; fn_tiporet; fn_formais; fn_locais; fn_corpo = corpo_tipado} *)
+  let typed_body = List.map (verify_statement_type return_type amb_fun) body in
+  A.Method {id; return_type; body=typed_body; parameters}
 
 
 let add_method_to_ambient (amb: Amb.t) (_method:S.exp A._method) =
@@ -307,7 +323,7 @@ let add_predefined_methods_to_ambient amb =
     predefined_functions
 
 
-let semantic (ast:S.exp A.prog) =
+let semantic (ast:S.exp A.prog) : T.exp A.prog =
   (* cria ambiente global inicialmente vazio *)
   let amb_global = Amb.novo_amb [] in
 
@@ -317,9 +333,11 @@ let semantic (ast:S.exp A.prog) =
 
   List.iter (add_method_to_ambient amb_global) methods;
 
-  List.map (verify_types_inside_method amb_global) methods;
+  let typed_methods = List.map (verify_types_inside_method amb_global) methods in
 
-  verify_types_inside_method amb_global main_method;
+  let typed_main = verify_types_inside_method amb_global main_method in
+
+  A.Prog (A.MainClass (_class_name, MainMethod(typed_main), typed_methods))
 
 
 
