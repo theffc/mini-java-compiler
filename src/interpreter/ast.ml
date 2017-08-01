@@ -47,7 +47,7 @@ and 'exp statement =
     | StmPrint of 'exp
     | StmPrintLn of 'exp
     | StmIf of 'exp * 'exp statement list * 'exp stmElse option
-    | StmReturn of 'exp
+    | StmReturn of 'exp option
     | StmWhile of 'exp * 'exp statement list
 
 and 'exp stmElse = 
@@ -83,6 +83,7 @@ and litType =
     | LitDouble of float
     | LitChar of char
     | LitString of string
+    | LitVoid
 
 and literal = {
     pos: filePosition;

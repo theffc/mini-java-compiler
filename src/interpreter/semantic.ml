@@ -188,6 +188,12 @@ and verify_method_call (amb: Amb.t) (m:S.exp A.methodCall): (T.exp A.methodCall)
 
   let args_types = List.map (fun x -> x.t) typed_args in
 
+  if List.length args_types <> List.length ps_types then
+    let error = position_msg_error id.pos in
+    let msg = "numero de argumentos passados eh diferente do esperado pelo metodo" in
+    failwith (error ^ msg)
+  else
+
   List.map2 
     (fun a_t p_t -> 
       if a_t <> p_t then 
@@ -212,11 +218,19 @@ let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement:S.e
   let open A in
   match statement with
   | StmReturn(expression) ->
-    let {t; e} = infer_expression_type amb expression in
-    if t <> return_type then
-      failwith "a expressao retornada deve ter o mesmo tipo que o retorno declarado pelo metodo"
-    else
-      StmReturn(e)
+    (match expression with
+      | Some(exp) -> 
+        let {t; e} = infer_expression_type amb exp in
+        if t <> return_type then
+          failwith "a expressao retornada deve ter o mesmo tipo que o retorno declarado pelo metodo"
+        else
+          StmReturn(Some(e))
+      | None ->
+        if return_type <> Void then
+          failwith "a expressao retornada deve ter o mesmo tipo que o retorno declarado pelo metodo"
+        else
+          StmReturn(None)
+    )
 
   | StmVarDecl(declared_variables) ->
     List.iter (add_variable_to_amb amb) declared_variables;

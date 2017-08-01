@@ -24,3 +24,10 @@ let parse_typed_ast_from_file file =
   let lexbuf = Lexing.from_channel ic in
   let ast = Parser.prog Lexer.token lexbuf in
   X.semantic ast
+
+let interpret_typed_ast_from_file file =
+  let ic = open_in file in
+  let lexbuf = Lexing.from_channel ic in
+  let ast = Parser.prog Lexer.token lexbuf in
+  let typed_ast = X.semantic ast in
+  Interpreter.interpret typed_ast

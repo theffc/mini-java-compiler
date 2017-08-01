@@ -6,6 +6,8 @@
 #load "tabsimb.cmo";;
 #load "ambiente.cmo";;
 #load "semantic.cmo";;
+#load "ambInterp.cmo";;
+#load "interpreter.cmo";;
 #load "main.cmo";;
 
 

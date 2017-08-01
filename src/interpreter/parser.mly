@@ -183,7 +183,7 @@ stm_else:
     ;
 
 stm_return:
-    | RETURN e=expression SEMI_COLON { StmReturn(e) }
+    | RETURN e=expression? SEMI_COLON { StmReturn(e) }
     ;
 
 stm_while:

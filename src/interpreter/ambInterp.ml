@@ -1,12 +1,9 @@
 module Tab = Tabsimb
 module A = Ast
 
-type entrada_fn = { tipo_fn:  A._type;
-                    formais: (string * A._type) list;
-}
-
-type entrada =  EntFun of entrada_fn
-             |  EntVar of A._type
+type entrada =  
+    | EntFun of (Tast.exp Ast._method)
+    | EntVar of A._type * (A.litType option)
 
 type t = {
   ambv : entrada Tab.tabela
@@ -18,13 +15,19 @@ let novo_escopo amb = { ambv = Tab.novo_escopo amb.ambv }
 
 let busca amb ch = Tab.busca amb.ambv ch
 
-let insere_local amb ch t =
-  Tab.insere amb.ambv ch (EntVar t)
+let atualiza_var amb ch t v =
+  Tab.atualiza amb.ambv ch (EntVar (t,v))
 
-let insere_param amb ch t =
-  Tab.insere amb.ambv ch (EntVar t)
+let insere_local amb nome t v =
+  Tab.insere amb.ambv nome (EntVar (t,v))
 
-let insere_fun amb nome params resultado =
-  let ef = EntFun { tipo_fn = resultado;
-                    formais = params }
-  in Tab.insere amb.ambv nome ef
+let insere_param amb nome t v =
+  Tab.insere amb.ambv nome (EntVar (t,v))
+
+
+let insere_fun amb fn =
+  let A.Method{id} = fn in
+  Tab.insere amb.ambv id.name (EntFun(fn))
+
+let insere amb nome value =
+  Tab.insere amb.ambv nome value
