@@ -98,8 +98,7 @@ let make_id id =
  
 
 
-%start <Ast.prog> prog
-
+%start <Sast.exp Ast.prog> prog
 %%
    
 prog:

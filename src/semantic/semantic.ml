@@ -1,5 +1,8 @@
 module Amb = Ambiente
 module A = Ast
+module S = Sast
+module T = Tast
+
 
 type operator_context = Arithmetical | Logical | Relational
 
@@ -120,7 +123,7 @@ let find_method (amb: Amb.t) (id: A.id): Amb.entrada_fn =
     failwith (error ^ msg)
 
 
-let rec infer_term_type (amb: Amb.t) (term: A.term): A._type =
+let rec infer_term_type (amb: Amb.t) (term: S.exp A.term): A._type =
   let open A in
   match term with
   | TermLiteral {litType} ->
@@ -140,23 +143,30 @@ let rec infer_term_type (amb: Amb.t) (term: A.term): A._type =
     verify_method_call amb m
 
 
-and infer_expression_type (amb: Amb.t) (expression: A.expression): A._type  =
+and infer_expression_type (amb: Amb.t) (expression: S.exp) =
   let open A in
   match expression with
-  | ExpTerm(term) -> infer_term_type amb term
+  | ExpTerm(term) -> 
+    let t = infer_term_type amb term in
+    let t_e = T.ExpTerm(term, t) in
+    {t=t; e = t_e}
   
-  | ExpOperator {e1; op; e2} ->
+  | ExpOperator {e1; op; e2} -> (
     let exp1_type = infer_expression_type amb e1 in
     let exp2_type = infer_expression_type amb e2 in
     
     let op_context = find_operator_context op in
-    match op_context with
-    | Arithmetical -> infer_arithmetical_operation_type exp1_type exp2_type op.pos
-    | Logical -> infer_logical_operation_type exp1_type exp2_type op.pos
-    | Relational -> infer_relational_operation_type exp1_type exp2_type op.pos
+    let t = (
+      match op_context with
+      | Arithmetical -> infer_arithmetical_operation_type exp1_type exp2_type op.pos
+      | Logical -> infer_logical_operation_type exp1_type exp2_type op.pos
+      | Relational -> infer_relational_operation_type exp1_type exp2_type op.pos
+      ) 
+    in
+    {t= t; e= {e1=e1; op=op; e2=e2; expType=t} }
+  )
 
-
-and verify_method_call (amb: Amb.t) (m: A.methodCall): A._type =
+and verify_method_call (amb: Amb.t) (m:S.exp A.methodCall): A._type =
   let (id, arguments) = 
     match m with
     | A.MethodCall(id, arguments) -> (id, arguments)
@@ -195,7 +205,7 @@ let add_variable_to_amb amb variable =
   Amb.insere_local amb id.name t
 
 
-let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement: A.statement)  =
+let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement:S.exp A.statement)  =
   let open A in
   match statement with
   | StmReturn(expression) ->
@@ -270,7 +280,7 @@ let verify_types_inside_method amb m =
   (* A.DecFun {fn_nome; fn_tiporet; fn_formais; fn_locais; fn_corpo = corpo_tipado} *)
 
 
-let add_method_to_ambient (amb: Amb.t) (_method: A._method) =
+let add_method_to_ambient (amb: Amb.t) (_method:S.exp A._method) =
   let open A in
   let A.Method m = _method in
   let parameters = 
@@ -297,7 +307,7 @@ let add_predefined_methods_to_ambient amb =
     predefined_functions
 
 
-let semantic (ast: A.prog) =
+let semantic (ast:S.exp A.prog) =
   (* cria ambiente global inicialmente vazio *)
   let amb_global = Amb.novo_amb [] in
 

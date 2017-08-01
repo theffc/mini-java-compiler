@@ -17,20 +17,21 @@ and _type =
     | Void
 (*		  | Array of _type *)
 
-and prog = 
-	Prog of mainClass
+and 'exp prog = 
+	Prog of 'exp mainClass
 
-and mainClass = 
-	MainClass of id * mainMethod * _method list
+and 'exp mainClass = 
+	MainClass of id * 'exp mainMethod * 'exp _method list
 
-and mainMethod = 
-	MainMethod of _method
+and 'exp mainMethod = 
+	MainMethod of 'exp _method
 
-and _method = Method of {
+and 'exp _method = 
+    Method of {
         id: id;
         return_type: _type;
         parameters: parameter list;
-        body: statement list;
+        body: 'exp statement list;
     }
 
 and parameter = 
@@ -39,20 +40,19 @@ and parameter =
 (* and statementsBlock = StatementsBlock of statement list
 and statement = Statement of  *)
 
-and statement = 
-	| StmAttr of variable * expression
+and 'exp statement = 
+	| StmAttr of 'exp variable * 'exp
     | StmVarDecl of varDeclaration list
-    | StmMethodCall of methodCall
-    | StmPrint of expression
-    | StmPrintLn of expression
-    | StmIf of expression * statement list * stmElse option
-    | StmReturn of expression
-    | StmWhile of expression * statement list
-    | StmNewObj of newObj
+    | StmMethodCall of 'exp methodCall
+    | StmPrint of 'exp
+    | StmPrintLn of 'exp
+    | StmIf of 'exp * 'exp statement list * 'exp stmElse option
+    | StmReturn of 'exp
+    | StmWhile of 'exp * 'exp statement list
+    | StmNewObj of 'exp newObj
 
-and stmElse = 
-	StmElse of statement list
-	(* | StmElseIf of expression * statement list * stmElse option *)
+and 'exp stmElse = 
+	StmElse of 'exp statement list
 
 and varDeclaration =
 	VarDecl of id * _type
@@ -90,28 +90,22 @@ and literal = {
     litType: litType
 }
 
-and methodCall = 
-	| MethodCall of id * methodArgument list
-	| MethodCallThroughType of variable * id * methodArgument list
+and 'exp methodCall = 
+	| MethodCall of id * 'exp methodArgument list
+	| MethodCallThroughType of 'exp variable * id * 'exp methodArgument list
 
-and methodArgument = 
-	| MethodArgument of expression 
+and 'exp methodArgument = 
+	| MethodArgument of 'exp 
 
-and expression = 
-	| ExpOperator of {e1: expression; op: operator; e2: expression}
-	| ExpTerm of term
-	| ExpNotTerm of term
-	| ExpMinusTerm of term
-
-and term = 
+and 'exp term = 
 	| TermLiteral of literal
-	| TermVariable of variable
-	| TermMethodCall of methodCall
-	| TermNewObj of newObj
+	| TermVariable of 'exp variable
+	| TermMethodCall of 'exp methodCall
+	| TermNewObj of 'exp newObj
 
-and variable =
+and 'exp variable =
 	| Var of id
-	| VarArray of id * expression
+	| VarArray of id * 'exp
 
-and newObj = 
-	NewObj of methodCall
+and 'exp newObj = 
+	NewObj of 'exp methodCall
