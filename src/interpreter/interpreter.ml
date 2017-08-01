@@ -202,20 +202,15 @@ let find_method (amb: Amb.t) (id: A.id): T.exp Ast._method =
     failwith (error ^ msg)
 
 
-type 'e typed_expression = {
-  t: A._type;
-  e: 'e;
-}
-
-
 let add_parameter_to_ambient (amb: Amb.t) (parameter: A.parameter) =
   let A.Parameter (id, t) = parameter in
-  Amb.insere_param amb id.name t
+  Amb.insere_var amb id.name t
 
 
 let add_variable_to_amb (amb: Amb.t) (variable: A.varDeclaration) =
   let A.VarDecl(id, t) = variable in
-  Amb.insere_local amb id.name t None
+  Amb.insere_var amb id.name t None;
+  ()
 
 
 let rec interpret_expression (amb: Amb.t) (expression: T.exp) : A.litType =
@@ -259,8 +254,10 @@ and interpret_statement (amb: Amb.t) (statement:T.exp A.statement) =
         raise (Valor_de_retorno e1)
     )
 
-  | StmVarDecl(declared_variables) ->
+  | StmVarDecl(declared_variables) -> (
     List.iter (add_variable_to_amb amb) declared_variables;
+    ()
+  )
 
   | StmMethodCall(m) ->
     interpret_method_call amb m;
@@ -269,7 +266,7 @@ and interpret_statement (amb: Amb.t) (statement:T.exp A.statement) =
   | StmAttr(Var(id), expression) ->
     let Amb.EntVar(t, _) = Amb.busca amb id.name in
     let e = interpret_expression amb expression in
-    Amb.atualiza_var amb id.name t;
+    Amb.atualiza_var amb id.name t (Some(e));
     ()
 
   | StmIf(expression, body, elseBody) ->
@@ -306,6 +303,7 @@ and interpret_statement (amb: Amb.t) (statement:T.exp A.statement) =
     (match e with
       | A.LitInt (n) -> print_int n
       | A.LitFloat (n) -> print_float n
+      | A.LitDouble (n) -> print_float n
       | A.LitString (n) -> print_string n
       | _ -> failwith "Fail print"
     )
@@ -315,6 +313,7 @@ and interpret_statement (amb: Amb.t) (statement:T.exp A.statement) =
     (match e with
       | A.LitInt (n) -> print_int n
       | A.LitFloat (n) -> print_float n
+      | A.LitDouble (n) -> print_float n
       | A.LitString (n) -> print_string n
       | _ -> failwith "Fail print"
     )
@@ -365,7 +364,6 @@ let predefined_functions =
 
 
 let interpret (ast:T.exp A.prog) : unit =
-  (* cria ambiente global inicialmente vazio *)
   let amb_global = Amb.novo_amb [] in
 
   (* add_predefined_methods_to_ambient amb_global; *)

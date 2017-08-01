@@ -10,7 +10,6 @@ val novo_amb :  (string * entrada) list -> t
 val novo_escopo : t -> t
 val busca: t -> string -> entrada
 val atualiza_var: t -> string -> Ast._type ->  (Ast.litType option) -> unit
-val insere_local : t -> string -> Ast._type -> (Ast.litType option) -> unit
-val insere_param : t -> string -> Ast._type-> (Ast.litType option) -> unit
+val insere_var : t -> string -> Ast._type -> (Ast.litType option) -> unit
 val insere_fun : t -> (Tast.exp Ast._method) -> unit
 val insere: t -> string -> entrada -> unit

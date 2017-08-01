@@ -1,6 +1,5 @@
 #directory "_build";;
 
-
 (* A ordem desses loads importa *)
 #load "lexer.cmo";;
 #load "parser.cmo";;
@@ -9,7 +8,5 @@
 #load "semantic.cmo";;
 #load "main.cmo";;
 
-open Ast
-open Ambiente
-open Semantic
+
 open Main

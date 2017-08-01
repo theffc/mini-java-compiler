@@ -4,10 +4,10 @@ public class micro11
 {
 	public static void main(String[] args)
 	{
-
+        verifica(2);
 	}
 
-	public static int verifica() {
+	public static int verifica(int bla) {
         String x;
 
         x = "teste";
@@ -36,6 +36,10 @@ public class micro11
         }
 
         y = 3;
+
+        boolean blab;
+
+        System.out.println(blab);
 	}
 
     public static int teste(int p1, int p2) {

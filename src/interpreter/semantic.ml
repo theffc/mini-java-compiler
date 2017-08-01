@@ -281,17 +281,21 @@ let rec verify_statement_type (return_type: A._type) (amb: Amb.t) (statement:S.e
 
   | StmPrint(expression) ->
     let {t; e} = infer_expression_type amb expression in
-    if t <> A.String then
-      failwith "comando print deve ser utilizado com tipos string"
-    else
-      StmPrint(e)
+    ( match t with
+      | A.String | A.Int | A.Float | A.Double ->
+        StmPrint(e)
+      | _ ->
+        failwith "comando print nao pode ser usado com esse tipo de valor"
+    )
 
   | StmPrintLn(expression) ->
     let {t; e} = infer_expression_type amb expression in
-    if t <> A.String then
-      failwith "comando println deve ser utilizado com tipos strings"
-    else
-      StmPrintLn(e)
+    ( match t with
+      | A.String | A.Int | A.Float | A.Double ->
+        StmPrintLn(e)
+      | _ ->
+        failwith "comando print nao pode ser usado com esse tipo de valor"
+    )
 
 
 let add_parameter_to_ambient (amb: Amb.t) (parameter: A.parameter) =

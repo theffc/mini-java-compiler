@@ -18,12 +18,8 @@ let busca amb ch = Tab.busca amb.ambv ch
 let atualiza_var amb ch t v =
   Tab.atualiza amb.ambv ch (EntVar (t,v))
 
-let insere_local amb nome t v =
+let insere_var amb nome t v =
   Tab.insere amb.ambv nome (EntVar (t,v))
-
-let insere_param amb nome t v =
-  Tab.insere amb.ambv nome (EntVar (t,v))
-
 
 let insere_fun amb fn =
   let A.Method{id} = fn in
